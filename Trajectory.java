@@ -26,4 +26,20 @@ public class Trajectory {
         }
         return false;
     }
+
+    /* Defines how to represent the trajectory as a string */
+    public String toString() {
+        String trajString = "";
+        trajString += "tripId: " + tripId + "\n";
+        trajString += "serviceId: " + serviceId + "\n";
+        trajString += "trajectories: \n";
+
+        for (Map.Entry<Long, Coordinate> entry : this.trajectory.entrySet()) {
+            long arrivalTimeSec = entry.getKey();
+            Coordinate stopCoords = entry.getValue();
+            trajString += Long.toString(arrivalTimeSec) + ": " + stopCoords.toString() + "\n";
+        }
+
+        return trajString;
+    }
 }

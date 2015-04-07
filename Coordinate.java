@@ -18,4 +18,9 @@ public class Coordinate {
     public double getLon() {
         return this.lon;
     }
+
+    /* Converts coordinate to a string representation */
+    public String toString() {
+        return "(" + lat + ", " + lon + ")";
+    }
 }

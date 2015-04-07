@@ -12,21 +12,30 @@ public class GTFSParserTest {
             File stopsFile = new File("bart_gtfs/stops.txt");
             File tripsFile = new File("bart_gtfs/trips.txt");
 
+            // Get the trajectories for all the trips
+            ArrayList<Trajectory> trajectories = GTFSParser.parseTrips(calendarFile,
+                    routesFile, stopTimesFile, stopsFile, tripsFile);
+
+            // Print all trajectories
+            for (Trajectory trajectory : trajectories) {
+                System.out.println(trajectory);
+            }
+
             // Load them into memory as a list of hash maps
-            ArrayList<Map<String, String>> calendar = GTFSParser.readCSV(calendarFile);
-            ArrayList<Map<String, String>> routes = GTFSParser.readCSV(routesFile);
-            ArrayList<Map<String, String>> stopTimes = GTFSParser.readCSV(stopTimesFile);
-            ArrayList<Map<String, String>> stops = GTFSParser.readCSV(stopsFile);
-            ArrayList<Map<String, String>> trips = GTFSParser.readCSV(tripsFile);
+            // ArrayList<Map<String, String>> calendar = GTFSParser.readCSV(calendarFile);
+            // ArrayList<Map<String, String>> routes = GTFSParser.readCSV(routesFile);
+            // ArrayList<Map<String, String>> stopTimes = GTFSParser.readCSV(stopTimesFile);
+            // ArrayList<Map<String, String>> stops = GTFSParser.readCSV(stopsFile);
+            // ArrayList<Map<String, String>> trips = GTFSParser.readCSV(tripsFile);
 
             // Now print these lists to verify
-            printCSV(calendar);
-            printCSV(routes);
-            printCSV(stopTimes);
-            printCSV(stops);
-            printCSV(trips);
+            // printCSV(calendar);
+            // printCSV(routes);
+            // printCSV(stopTimes);
+            // printCSV(stops);
+            // printCSV(trips);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Invalid file.");
         }
     }
