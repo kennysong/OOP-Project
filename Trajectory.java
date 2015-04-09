@@ -13,6 +13,11 @@ public class Trajectory {
         this.trajectory = trajectory;
     }
 
+    /* Returns the trajectory variable of the instance */
+    public SortedMap<Long, Coordinate> getTrajectory() {
+        return this.trajectory;
+    }
+
     /* Returns a coordinate for the given time, null if doesn't exist */
     public Coordinate getPosition(long time) {
         Coordinate position = this.trajectory.get(time);

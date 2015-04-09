@@ -3,29 +3,6 @@ import java.io.*;
 import java.text.*;
 
 public class GTFSParser {
-    /* Returns a list of hash maps of each row (column name: value) in the CSV */
-    public static ArrayList<Map<String, String>> readCSV(File file) throws IOException {
-        // Prepare to read the input CSV file
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-
-        // Some variables for the CSV file
-        String[] headerRow = br.readLine().split(",");
-        ArrayList<Map<String, String>> csvRows = new ArrayList<Map<String, String>>();
-
-        // Iterate through each line in the CSV, adding it to the list
-        while ((line = br.readLine()) != null) {
-            String[] rowValues = line.split(",", -1); // -1 to accept empty strings
-            Map<String, String> row = new HashMap<String, String>();
-            for (int i = 0; i < headerRow.length; i++) {
-                row.put(headerRow[i], rowValues[i]);
-            }
-            csvRows.add(row);
-        }
-
-        return csvRows;
-    }
-
     /* Returns a list of trajectories of various trips */
     public static ArrayList<Trajectory> parseTrips(File calendarFile,
             File routesFile, File stopTimesFile, File stopsFile, File tripsFile) {
@@ -35,21 +12,21 @@ public class GTFSParser {
 
         try {
             // Read in all files
-            ArrayList<Map<String, String>> calendar = GTFSParser.readCSV(calendarFile);
-            ArrayList<Map<String, String>> routes = GTFSParser.readCSV(routesFile);
-            ArrayList<Map<String, String>> stopTimes = GTFSParser.readCSV(stopTimesFile);
-            ArrayList<Map<String, String>> stops = GTFSParser.readCSV(stopsFile);
-            ArrayList<Map<String, String>> trips = GTFSParser.readCSV(tripsFile);
+            ArrayList<Map<String, String>> calendar = readCSV(calendarFile);
+            ArrayList<Map<String, String>> routes = readCSV(routesFile);
+            ArrayList<Map<String, String>> stopTimes = readCSV(stopTimesFile);
+            ArrayList<Map<String, String>> stops = readCSV(stopsFile);
+            ArrayList<Map<String, String>> trips = readCSV(tripsFile);
 
             // Parse trips from trips file
             for (Map<String, String> trip : trips) {
-                // Get attributes for new trajectory
+                // Get attributes for new Trajectory
                 String tripId = trip.get("trip_id");
                 String serviceId = trip.get("service_id");
                 SortedMap<Long, Coordinate> trajectoryMap = getTrajectoryMap(tripId, 
                         serviceId, calendar, routes, stopTimes, stops);
 
-                // Create new trajectory, add it to the list
+                // Create new Trajectory, add it to the list
                 Trajectory trajectory = new Trajectory(tripId, serviceId, trajectoryMap);
                 trajectories.add(trajectory);
             }
@@ -80,13 +57,7 @@ public class GTFSParser {
         for (Map<String, String> stopTime : tripStopTimes) {
             // Find the arrival time at a stop, in seconds past midnight
             String arrivalTime = stopTime.get("arrival_time");
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss");
-            Date arrivalDate = null;
-            try { arrivalDate = dateFormatter.parse(arrivalTime); } 
-            catch (ParseException e) { System.out.println("Error parsing arrival time."); }
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(arrivalDate);
-            long arrivalTimeSec = cal.getTimeInMillis();
+            long arrivalTimeSec = getElapsedTime(arrivalTime);
 
             // Find the lat/lon of the stop
             String stopId = stopTime.get("stop_id");
@@ -106,4 +77,52 @@ public class GTFSParser {
 
         return trajectoryMap;
     }
+
+    /* Returns a time HH:mm:ss formatted as UNIX time (seconds)
+     * We assume a time zone of PST (since BART is located there) */
+    public static long getElapsedTime(String arrivalTime) {
+        // Create the SimpleDateFormat object for time parsing
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss");
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("PST"));
+
+        // Next, create a Date object for this timestamp 
+        Date arrivalDate = null;
+        try { 
+            arrivalDate = dateFormatter.parse(arrivalTime); 
+        } 
+        catch (ParseException e) {
+            System.out.println("Error parsing arrival time."); 
+        }
+
+        // Finally, create a Calendar object, from which we can extract the seconds 
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(arrivalDate);
+        long arrivalTimeSec = cal.getTimeInMillis() / 1000;
+
+        return arrivalTimeSec;
+    }
+
+    /* Returns a list of hash maps of each row (column name: value) in the CSV */
+    public static ArrayList<Map<String, String>> readCSV(File file) throws IOException {
+        // Prepare to read the input CSV file
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+
+        // Some variables for the CSV file
+        String[] headerRow = br.readLine().split(",");
+        ArrayList<Map<String, String>> csvRows = new ArrayList<Map<String, String>>();
+
+        // Iterate through each line in the CSV, adding it to the list
+        while ((line = br.readLine()) != null) {
+            String[] rowValues = line.split(",", -1); // -1 to accept empty strings
+            Map<String, String> row = new HashMap<String, String>();
+            for (int i = 0; i < headerRow.length; i++) {
+                row.put(headerRow[i], rowValues[i]);
+            }
+            csvRows.add(row);
+        }
+
+        return csvRows;
+    }
+
 }
