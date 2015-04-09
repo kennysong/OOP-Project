@@ -1,0 +1,27 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'oop.project.App'
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    baseName = 'oop-project'
+    version = '0.0.1'
+    manifest {
+        attributes 'Main-Class': 'oop.project.App'
+    }
+}
+
+dependencies {
+    compile 'com.google.transit:gtfs-realtime-bindings:0.0.4'
+    compile 'org.apache.commons:commons-lang3:3.4'
+}
+
+task localize(type: Sync) {
+    description "Syncs project dependencies and copies into './bin'"
+    from configurations.runtime
+    into './bin'
+}
