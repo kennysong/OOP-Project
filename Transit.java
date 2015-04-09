@@ -11,11 +11,11 @@ public class Transit {
 
         try {
             // Open all the GTFS CSV files
-            File calendarFile = new File("bart_gtfs/calendar.txt");
-            File routesFile = new File("bart_gtfs/routes.txt");
-            File stopTimesFile = new File("bart_gtfs/stop_times.txt");
-            File stopsFile = new File("bart_gtfs/stops.txt");
-            File tripsFile = new File("bart_gtfs/trips.txt");
+            File calendarFile = new File("bart_gtfs/calendar.csv");
+            File routesFile = new File("bart_gtfs/routes.csv");
+            File stopTimesFile = new File("bart_gtfs/stop_times.csv");
+            File stopsFile = new File("bart_gtfs/stops.csv");
+            File tripsFile = new File("bart_gtfs/trips.csv");
 
             // Get the trajectories for all the trips
             trajectories = GTFSParser.parseTrips(calendarFile,

@@ -23,7 +23,7 @@ public class GTFSParser {
                 // Get attributes for new Trajectory
                 String tripId = trip.get("trip_id");
                 String serviceId = trip.get("service_id");
-                SortedMap<Long, Coordinate> trajectoryMap = getTrajectoryMap(tripId, 
+                SortedMap<Long, Coordinate> trajectoryMap = getTrajectoryMap(tripId,
                         serviceId, calendar, routes, stopTimes, stops);
 
                 // Create new Trajectory, add it to the list
@@ -75,6 +75,8 @@ public class GTFSParser {
             trajectoryMap.put(arrivalTimeSec, stopCoords);
         }
 
+        // Finally, extrapolate these trajectories to every second
+        trajectoryMap = extrapolateTrajectory(trajectoryMap);
         return trajectoryMap;
     }
 
@@ -85,21 +87,59 @@ public class GTFSParser {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss");
         dateFormatter.setTimeZone(TimeZone.getTimeZone("PST"));
 
-        // Next, create a Date object for this timestamp 
+        // Next, create a Date object for this timestamp
         Date arrivalDate = null;
-        try { 
-            arrivalDate = dateFormatter.parse(arrivalTime); 
-        } 
-        catch (ParseException e) {
-            System.out.println("Error parsing arrival time."); 
-        }
+        try { arrivalDate = dateFormatter.parse(arrivalTime); }
+        catch (ParseException e) { System.out.println("Error parsing arrival time."); }
 
-        // Finally, create a Calendar object, from which we can extract the seconds 
+        // Finally, create a Calendar object, from which we can extract the seconds
         Calendar cal = Calendar.getInstance();
         cal.setTime(arrivalDate);
         long arrivalTimeSec = cal.getTimeInMillis() / 1000;
 
         return arrivalTimeSec;
+    }
+
+    /* Extrapolates a trajectory map to have points for every second */
+    public static SortedMap<Long, Coordinate> extrapolateTrajectory(SortedMap<Long, Coordinate> trajectoryMap) {
+        // Set up some variables for iteration
+        long prevTime = -1;
+        Coordinate prevCoordinate = new Coordinate(0.0, 0.0);
+        SortedMap<Long, Coordinate> newTrajectoryMap = new TreeMap<Long, Coordinate>();
+        newTrajectoryMap.putAll(trajectoryMap);
+
+        // Iterate through each stop in the trajectory
+        for(Map.Entry<Long, Coordinate> entry : trajectoryMap.entrySet()) {
+            // End points for current path
+            long time = entry.getKey();
+            Coordinate coordinate = entry.getValue();
+
+            // Skip the first point
+            if (prevTime == -1) {
+                prevTime = time;
+                prevCoordinate = coordinate;
+                continue;
+            }
+
+            // Calculate the extrapolated points for each second, and add into trajectoryMap
+            long dTime = time - prevTime;
+            double dLat = (coordinate.getLat() - prevCoordinate.getLat()) / dTime;
+            double dLon = (coordinate.getLon() - prevCoordinate.getLon()) / dTime;
+            double prevLat = prevCoordinate.getLat();
+            double prevLon = prevCoordinate.getLon();
+            for (int dt = 1; dt < dTime; dt++) {
+                long currentTime = prevTime + dt;
+                double currentLat = prevLat + dLat;
+                double currentLon = prevLon + dLat;
+                Coordinate currentCoordinate = new Coordinate(currentLat, currentLon);
+                newTrajectoryMap.put(currentTime, currentCoordinate);
+
+                prevLat = currentLat;
+                prevLon = currentLon;
+            }
+        }
+
+        return newTrajectoryMap;
     }
 
     /* Returns a list of hash maps of each row (column name: value) in the CSV */
