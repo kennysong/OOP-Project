@@ -1,7 +1,6 @@
 package oop.project;
 
 import java.net.URL;
-import java.util.*;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
