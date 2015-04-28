@@ -29,21 +29,22 @@ public class App {
     public static void main(String[] args) throws Exception {
         URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
         FeedMessage feed = FeedMessage.parseFrom(url.openStream());
+        System.out.println(feed);
         for (FeedEntity entity : feed.getEntityList()) {
+            System.out.println(entity);
             if (entity.hasTripUpdate()) {
                 TripUpdate update = entity.getTripUpdate();
                 System.out.println(update);
 
-                TripDescriptor td = update.getTrip();
-                System.out.println(td.getTripId());
+                // TripDescriptor td = update.getTrip();
+                // System.out.println(td.getTripId());
 
-                StopTimeUpdate stu = update.getStopTimeUpdate(0);
-                System.out.println(stu.getStopSequence());
-                StopTimeEvent dep =
-                System.out.println(stu.getStopId());
-
-                //only look at one
-                break;
+                // StopTimeUpdate stu = update.getStopTimeUpdate(0);
+                // System.out.println(stu.getStopSequence());
+                // StopTimeEvent dep = stu.getDeparture();
+                // System.out.println(dep.getDelay());
+                // System.out.println(dep.getUncertainty());
+                // System.out.println(stu.getStopId());
             }
         }
         System.out.println("There are " + feed.getEntityCount() + " update(s)");
