@@ -1,29 +1,51 @@
 package oop.project;
 
-
 import java.net.URL;
 import java.util.*;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
-import org.apache.commons.lang3.StringEscapeUtils;
+import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 
 /**
  * Prints realtime info from bart GTFS-realtime to the console.
  * This is an example.
+ *
+ * trip {                   //TripUpdate.getTrip();
+ *   trip_id: "66R11"       //TripDescriptor.getTrip();
+ * }
+ * stop_time_update {       //TripUpdate.getStopTimeUpdate(i);
+ *   stop_sequence: 1       //StopTimeUpdate.getStopSequence();
+ *   departure {            //StopTimeUpdate.getDeparture();
+ *     delay: 0             //StopTimeEvent.getDelay();
+ *     uncertainty: 30      //StopTimeEvent.getUncertainty();
+ *   }
+ *   stop_id: "FRMT"        //StopTimeUpdate.getStopId();
+ * }
  */
 public class App {
     public static void main(String[] args) throws Exception {
         URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
         FeedMessage feed = FeedMessage.parseFrom(url.openStream());
-        System.out.println("There are " + feed.getEntityCount() + " update(s)");
         for (FeedEntity entity : feed.getEntityList()) {
             if (entity.hasTripUpdate()) {
-                System.out.println(entity.getTripUpdate());
-                //debug; should parse and make a map
-                String currentUpdate = entity.getTripUpdate().toString();
-                String result = StringEscapeUtils.escapeJava(currentUpdate);
-                System.out.println(result);
+                TripUpdate update = entity.getTripUpdate();
+                System.out.println(update);
+
+                TripDescriptor td = update.getTrip();
+                System.out.println(td.getTripId());
+
+                StopTimeUpdate stu = update.getStopTimeUpdate(0);
+                System.out.println(stu.getStopSequence());
+                StopTimeEvent dep =
+                System.out.println(stu.getStopId());
+
+                //only look at one
+                break;
             }
         }
+        System.out.println("There are " + feed.getEntityCount() + " update(s)");
     }
 }

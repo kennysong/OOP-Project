@@ -7,6 +7,15 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+  main {
+    resources {
+        srcDirs = ["src/main/java"]
+        includes = ["**/*.fxml", "**/*.css", "**/*.csv"]
+    }
+  }
+}
+
 jar {
     baseName = 'oop-project'
     version = '0.0.1'
@@ -18,6 +27,7 @@ jar {
 dependencies {
     compile 'com.google.transit:gtfs-realtime-bindings:0.0.4'
     compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'org.json:json:20141113'
 }
 
 task localize(type: Sync) {
