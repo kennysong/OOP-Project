@@ -1,3 +1,5 @@
+package oop.project;
+
 public class Coordinate {
     // Private instance variables for a Coordinate object
     private double lat;
