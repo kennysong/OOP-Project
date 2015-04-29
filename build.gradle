@@ -1,11 +1,10 @@
-apply plugin: 'java'
-apply plugin: 'application'
+plugins {
+    id 'java'
+    id 'application'
+}
 
 mainClassName = 'oop.project.App'
-
-repositories {
-    mavenCentral()
-}
+version = '0.0.1'
 
 sourceSets {
   main {
@@ -13,15 +12,12 @@ sourceSets {
         srcDirs = ["src/main/java"]
         includes = ["**/*.fxml", "**/*.css", "**/*.csv"]
     }
+    output.resourcesDir = sourceSets.main.output.classesDir
   }
 }
 
-jar {
-    baseName = 'oop-project'
-    version = '0.0.1'
-    manifest {
-        attributes 'Main-Class': 'oop.project.App'
-    }
+repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -30,8 +26,29 @@ dependencies {
     compile 'org.json:json:20141113'
 }
 
+//custom tasks
+task fatJar(type: Jar) {
+    description "Creates a single jar that includes all dependencies"
+    mustRunAfter = ['jar']
+    baseName = project.name + '-fat'
+    manifest {
+        attributes 'Implementation-Title': 'OOP-Project',
+                   'Implementation-Version': version,
+                   'Main-Class': 'oop.project.App'
+    }
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    with jar
+}
+
 task localize(type: Sync) {
-    description "Syncs project dependencies and copies into './bin'"
+    description "Syncs project dependencies into './bin'"
     from configurations.runtime
     into './bin'
 }
+
+//ensure fatJar is run after jar
+jar.finalizedBy fatJar
