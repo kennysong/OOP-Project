@@ -28,29 +28,28 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
  */
 public class App {
     public static void main(String[] args) throws Exception {
-        // System.out.println("URL");
-        // URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
-        // FeedMessage feed = FeedMessage.parseFrom(url.openStream());
-        // // System.out.println(feed);
-        // for (FeedEntity entity : feed.getEntityList()) {
-        //     System.out.println(entity);
-        //     if (entity.hasTripUpdate()) {
-        //         TripUpdate update = entity.getTripUpdate();
-        //         System.out.println(update);
+        System.out.println("URL");
+        //get updates from bart
+        URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
+        FeedMessage feed = FeedMessage.parseFrom(url.openStream());
+        //loop through all message entities
+        for (FeedEntity entity : feed.getEntityList()) {
+            if (entity.hasTripUpdate()) {
+                TripUpdate update = entity.getTripUpdate();
+                System.out.println(update);
 
-        //         // TripDescriptor td = update.getTrip();
-        //         // System.out.println(td.getTripId());
+                // TripDescriptor td = update.getTrip();
+                // System.out.println(td.getTripId());
 
-        //         // StopTimeUpdate stu = update.getStopTimeUpdate(0);
-        //         // System.out.println(stu.getStopSequence());
-        //         // StopTimeEvent dep = stu.getDeparture();
-        //         // System.out.println(dep.getDelay());
-        //         // System.out.println(dep.getUncertainty());
-        //         // System.out.println(stu.getStopId());
-        //     }
-        //     break;
-        // }
-        // System.out.println("There are " + feed.getEntityCount() + " update(s)");
+                // StopTimeUpdate stu = update.getStopTimeUpdate(0);
+                // System.out.println(stu.getStopSequence());
+                // StopTimeEvent dep = stu.getDeparture();
+                // System.out.println(dep.getDelay());
+                // System.out.println(dep.getUncertainty());
+                // System.out.println(stu.getStopId());
+            }
+        }
+        System.out.println("There were " + feed.getEntityCount() + " update(s)");
 
         System.out.println("GTFS");
         try {
@@ -61,37 +60,14 @@ public class App {
             URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
             URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
 
-            System.out.print("working...");
+            System.out.print("loading trajectories...");
             // Get the trajectories for all the trips
+            //only load into memory for now
             ArrayList<Trajectory> trajectories = GTFSParser.parseTrips(calendarPath,
                     routesPath, stopTimesPath, stopsPath, tripsPath);
-
-            // Print all trajectories
-            // for (Trajectory trajectory : trajectories) {
-            //     System.out.println(trajectory);
-            // }
-
-            // Print a single trajectory (the extrapolated trajectories are massive)
-            // System.out.println(trajectories.get(0));
             System.out.println("done");
-
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Invalid file.");
         }
-
-        // //debug
-        // System.out.println("FILES");
-        // File f = new File("."); // current directory
-
-        // File[] files = f.listFiles();
-        // for (File file : files) {
-        //     if (file.isDirectory()) {
-        //         System.out.print("directory:");
-        //     } else {
-        //         System.out.print("     file:");
-        //     }
-        //     System.out.println(file.getCanonicalPath());
-        // }
     }
 }
