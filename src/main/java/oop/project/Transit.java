@@ -1,7 +1,8 @@
 package oop.project;
 
-import java.util.*;
 import java.io.*;
+import java.net.URL;
+import java.util.*;
 
 public class Transit {
     // Private variables for a transit system instance
@@ -13,15 +14,15 @@ public class Transit {
 
         try {
             // Open all the GTFS CSV files
-            File calendarFile = new File("bart_gtfs/calendar.csv");
-            File routesFile = new File("bart_gtfs/routes.csv");
-            File stopTimesFile = new File("bart_gtfs/stop_times.csv");
-            File stopsFile = new File("bart_gtfs/stops.csv");
-            File tripsFile = new File("bart_gtfs/trips.csv");
+            URL calendarPath = Transit.class.getResource("bart_gtfs/calendar.csv");
+            URL routesPath = Transit.class.getResource("bart_gtfs/routes.csv");
+            URL stopTimesPath = Transit.class.getResource("bart_gtfs/stop_times.csv");
+            URL stopsPath = Transit.class.getResource("bart_gtfs/stops.csv");
+            URL tripsPath = Transit.class.getResource("bart_gtfs/trips.csv");
 
             // Get the trajectories for all the trips
-            trajectories = GTFSParser.parseTrips(calendarFile,
-                    routesFile, stopTimesFile, stopsFile, tripsFile);
+            trajectories = GTFSParser.parseTrips(calendarPath, routesPath,
+                stopTimesPath, stopsPath, tripsPath);
         } catch (Exception e) {
             System.out.println("Invalid file.");
         }
@@ -31,7 +32,7 @@ public class Transit {
 
     /* Returns the active trajectories at a specified time */
     public ArrayList<Trajectory> activeTrajectories(long time) {
-        // Go through all our Trajectory objects, going through each point in 
+        // Go through all our Trajectory objects, going through each point in
         // the Trajectory to see if it has a point at the specified time
         ArrayList<Trajectory> trajectoryList = new ArrayList<Trajectory>();
         for (Trajectory trajectory : this.trajectories) {
