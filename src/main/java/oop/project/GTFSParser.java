@@ -1,24 +1,25 @@
 package oop.project;
 
-import java.util.*;
 import java.io.*;
+import java.net.URL;
 import java.text.*;
+import java.util.*;
 
 public class GTFSParser {
     /* Returns a list of trajectories of various trips */
-    public static ArrayList<Trajectory> parseTrips(File calendarFile,
-            File routesFile, File stopTimesFile, File stopsFile, File tripsFile) {
+    public static ArrayList<Trajectory> parseTrips(URL calendarPath,
+            URL routesPath, URL stopTimesPath, URL stopsPath, URL tripsPath) {
 
         // List of trajectory for each tripId, serviceId combination
         ArrayList<Trajectory> trajectories = new ArrayList<Trajectory>();
 
         try {
             // Read in all files
-            ArrayList<Map<String, String>> calendar = readCSV(calendarFile);
-            ArrayList<Map<String, String>> routes = readCSV(routesFile);
-            ArrayList<Map<String, String>> stopTimes = readCSV(stopTimesFile);
-            ArrayList<Map<String, String>> stops = readCSV(stopsFile);
-            ArrayList<Map<String, String>> trips = readCSV(tripsFile);
+            ArrayList<Map<String, String>> calendar = readCSV(calendarPath);
+            ArrayList<Map<String, String>> routes = readCSV(routesPath);
+            ArrayList<Map<String, String>> stopTimes = readCSV(stopTimesPath);
+            ArrayList<Map<String, String>> stops = readCSV(stopsPath);
+            ArrayList<Map<String, String>> trips = readCSV(tripsPath);
 
             // Parse trips from trips file
             for (Map<String, String> trip : trips) {
@@ -145,9 +146,9 @@ public class GTFSParser {
     }
 
     /* Returns a list of hash maps of each row (column name: value) in the CSV */
-    public static ArrayList<Map<String, String>> readCSV(File file) throws IOException {
+    public static ArrayList<Map<String, String>> readCSV(URL path) throws IOException {
         // Prepare to read the input CSV file
-        BufferedReader br = new BufferedReader(new FileReader(file));
+        BufferedReader br = new BufferedReader(new InputStreamReader(path.openStream()));
         String line;
 
         // Some variables for the CSV file
