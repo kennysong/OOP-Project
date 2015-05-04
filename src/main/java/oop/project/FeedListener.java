@@ -51,7 +51,7 @@ public class FeedListener implements Runnable {
             this.currentEntities = new ArrayList<FeedEntity>();
         }
         this.hasNew = true;
-        System.out.println("success!");
+        System.out.println("Created FeedListener on " + url);
     }
 
     // METHODS
