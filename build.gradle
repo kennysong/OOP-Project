@@ -3,7 +3,7 @@ plugins {
     id 'application'
 }
 
-mainClassName = 'oop.project.App'
+mainClassName = 'oop.project.MapApp'
 version = '0.0.1'
 
 sourceSets {
@@ -23,6 +23,7 @@ repositories {
 dependencies {
     compile 'com.google.transit:gtfs-realtime-bindings:0.0.4'
     compile 'com.twilio.sdk:twilio-java-sdk:4.0.2'
+    compile 'com.lynden:GMapsFX:1.1.1'
 }
 
 //custom tasks
@@ -33,7 +34,7 @@ task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'OOP-Project',
                    'Implementation-Version': version,
-                   'Main-Class': 'oop.project.App'
+                   'Main-Class': 'oop.project.MapApp'
     }
     from {
         configurations.compile.collect {

@@ -12,7 +12,7 @@ import com.twilio.sdk.*;
  * This is an example of a single entity:
  *
  * trip {                   //TripUpdate.getTrip();
- *   trip_id: "66R11"       //TripDescriptor.getTrip();
+ *   trip_id: "66R11"       //TripDescriptor.getTripId();
  * }
  * stop_time_update {       //TripUpdate.getStopTimeUpdate(i);
  *   stop_sequence: 1       //StopTimeUpdate.getStopSequence();
@@ -52,17 +52,24 @@ public class App {
         System.out.println("done");
 
         FeedListener bartTrips = new FeedListener("http://api.bart.gov/gtfsrt/tripupdate.aspx");
+        // FeedListener bartTrips = new FeedListener("http://developer.mbta.com/lib/GTRTFS/Alerts/VehiclePositions.pb");
         Thread updateThread = new Thread(bartTrips);
         updateThread.start();
         List<FeedEntity> entities;
 
         while (true) {
             if (bartTrips.hasNew) {
-                System.out.println("YES");
-                entities = bartTrips.getEntities();
-                printList(entities);
-                System.out.println("YES");
                 bartTrips.hasNew = false;
+
+                for (FeedEntity entity : bartTrips.getEntities()) {
+                    // System.out.println(entity.getTripUpdate().getTrip().getTripId());
+                    for (int i = 0; i < trajectories.size(); i++) {
+                        Trajectory t = trajectories.get(i);
+                        if (entity.getId().equals(t.getTripId())) {
+                            System.out.println(entity.getId() + " located.");
+                        }
+                    }
+                }
             }
         }
     }
