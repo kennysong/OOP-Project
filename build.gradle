@@ -22,8 +22,7 @@ repositories {
 
 dependencies {
     compile 'com.google.transit:gtfs-realtime-bindings:0.0.4'
-    compile 'org.apache.commons:commons-lang3:3.4'
-    compile 'org.json:json:20141113'
+    compile 'com.twilio.sdk:twilio-java-sdk:4.0.2'
 }
 
 //custom tasks

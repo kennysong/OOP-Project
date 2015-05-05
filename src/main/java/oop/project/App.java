@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.transit.realtime.GtfsRealtime.*;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.*;
+import com.twilio.sdk.*;
 
 /**
  * Prints realtime info from bart GTFS-realtime to the console.
@@ -34,6 +35,9 @@ public class App {
     }
 
     public static void main(String[] args) throws Exception {
+        // Test our SMSSender class!
+        SMSSender.sendSMS("+12016321315", "Sent from App.java.");
+
         //load trajectories into memory
         //locate csv files
         URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
