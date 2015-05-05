@@ -26,7 +26,7 @@ dependencies {
     compile 'com.lynden:GMapsFX:1.1.1'
 }
 
-//custom tasks
+//custom settings and tasks
 task fatJar(type: Jar) {
     description "Creates a single jar that includes all dependencies"
     mustRunAfter = ['jar']
@@ -52,3 +52,8 @@ task localize(type: Sync) {
 
 //ensure fatJar is run after jar
 jar.finalizedBy fatJar
+
+//show detailed compilation warnings
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
