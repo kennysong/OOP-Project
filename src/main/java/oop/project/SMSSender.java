@@ -11,16 +11,17 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
 public class SMSSender {
-
-    /* Find your sid and token at twilio.com/user/account */
+    // Some authentication constants for Twilio
     public static final String ACCOUNT_SID = "ACfa82c38392db01c0349ce2682ad9134d";
     public static final String AUTH_TOKEN = "f34a0c90160c7392ee50d7632259fc90";
     public static final String TWILIO_NUM = "+12015523660";
 
+    /* Main method that will send a test SMS. */
     public static void main(String[] args) {
         sendSMS("+12016321315", "Sent from SMSSender.java.");
     }
 
+    /* Static method that will send an SMS, can be called from outside. */
     public static void sendSMS(String toNumber, String message) {
         // Set up Twilio object and authentication
         TwilioRestClient client = new TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN);
