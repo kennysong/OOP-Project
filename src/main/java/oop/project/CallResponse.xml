@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Response>
-    <Say language="en-US">Your train is arriving!</Say>
-    <Say language="zh-CN">你的火车快到了！</Say>
+    <Say language="zh-CN">你的火车快到了。</Say>
 </Response>
