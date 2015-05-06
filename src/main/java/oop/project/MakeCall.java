@@ -15,7 +15,7 @@ public class MakeCall {
     public static final String ACCOUNT_SID = "ACfa82c38392db01c0349ce2682ad9134d";
     public static final String AUTH_TOKEN = "f34a0c90160c7392ee50d7632259fc90";
     public static final String TWILIO_NUM = "+12015523660";
-    public static final String RESPONSE_XML = "https://raw.githubusercontent.com/kennysong/OOP-Project/master/src/main/java/oop/project/CallResponse.xml";
+    public static final String RESPONSE_XML = "https://cdn.rawgit.com/kennysong/OOP-Project/master/src/main/java/oop/project/CallResponse.xml";
 
     /* Main method that will send a test call. */
     public static void main(String[] args) {
