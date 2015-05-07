@@ -39,4 +39,28 @@ public class Stop {
                + "}";
     }
 
+    /**
+     * Get this stop's route id
+     * @return          int representing the route id of the containing route
+     */
+    public int getRouteID() {
+        return this.routeID;
+    }
+
+    /**
+     * Get this stop's route color
+     * @return          string represending the color of the containing route
+     */
+    public String getColor() {
+        return this.routeColor;
+    }
+
+    /**
+     * Get this stop's coordinates
+     * @return          coordinate object with lat lon of this stop
+     */
+    public Coordinate getCoord() {
+        return this.stopCoords;
+    }
+
 }

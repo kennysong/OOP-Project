@@ -6,6 +6,7 @@ import java.util.*;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -73,6 +74,11 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private FXMLLoader fin = new FXMLLoader();
 
     /**
+     * Container for each route's stops
+     */
+    private ArrayList<ArrayList<Stop>> routes = null;
+
+    /**
      * Container for trajectories
      */
     // private ArrayList<Trajectory> trajectories = null;
@@ -90,6 +96,8 @@ public class MapApp extends Application implements MapComponentInitializedListen
      * Standard start method for JavaFX Applications
      */
     public void start(Stage stage) {
+        //load BART routes
+        this.loadRoutes();
         //set title of application
         stage.setTitle("MapApp");
         //disable resize (at least, for now)
@@ -99,23 +107,31 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //set scene and show
         stage.setScene(this.makeScene());
         stage.show();
+    }
 
-        // new Thread() {
-        //     public void run() {
-        //         // load trajectories into memory
-        //         // locate csv files
-        //         URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
-        //         URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
-        //         URL stopTimesPath = App.class.getResource("bart_gtfs/stop_times.csv");
-        //         URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
-        //         URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
-
-        //         trajectories = GTFSParser.parseTrips(calendarPath,
-        //                 routesPath, stopTimesPath, stopsPath, tripsPath);
-        //         System.out.println("trajectories loaded.");
-        //         System.out.println(trajectories.get(0));
-        //     }
-        // }.start();
+    /**
+     * Parse GTFS data and load routes data on a background thread
+     */
+    private void loadRoutes() {
+        Thread th = new Thread(new Task<Void>() {
+            @Override
+            protected Void call() {
+                URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
+                URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
+                URL stopTimesPath = App.class.getResource("bart_gtfs/stop_times.csv");
+                URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
+                URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
+                routes = GTFSParser.getStopsByRoute(calendarPath,
+                                                    routesPath,
+                                                    stopTimesPath,
+                                                    stopsPath,
+                                                    tripsPath);
+                System.out.println("Stops by route loaded.");
+                return null;
+            }
+        });
+        th.setDaemon(true);
+        th.start();
     }
 
     /**
@@ -185,12 +201,30 @@ public class MapApp extends Application implements MapComponentInitializedListen
                         break;
                     //test
                     case SPACE:
-                        //create and add marker
-                        MarkerOptions markerOptions = new MarkerOptions()
-                                .position(new LatLong(37.773972, -122.431297))
-                                .title("SF")
-                                .visible(true);
-                        map.addMarker(new Marker(markerOptions));
+                        if (routes != null) {
+                            double offset = 0.000100;
+                            int i = 0;
+                            for (ArrayList<Stop> route : routes) {
+                                //get color of current route
+                                String color = route.get(0).getColor();
+                                //build array
+                                MVCArray lineArray = new MVCArray();
+                                for (Stop s : route) {
+                                    Coordinate coord = s.getCoord();
+                                    LatLong loc = new LatLong(coord.getLat() + offset*i, coord.getLon());
+                                    lineArray.push(loc);
+                                }
+                                PolylineOptions opts = new PolylineOptions()
+                                        .path(lineArray)
+                                        .strokeColor(color)
+                                        .strokeWeight(5);
+                                Polyline line = new Polyline(opts);
+                                map.addMapShape(line);
+                                i++;
+                            }
+                        } else {
+                            System.out.println("oop");
+                        }
                     //     if (trajectories != null) {
                     //         System.out.println(trajectories.size());
                     //         int[] inds = {223,534,345};
@@ -252,6 +286,13 @@ public class MapApp extends Application implements MapComponentInitializedListen
                .zoomControl(true);
         //set map using above options
         this.map = this.mapComponent.createMap(options);
+
+        //create and add marker for SF
+        MarkerOptions markerOptions = new MarkerOptions()
+                .position(center)
+                .title("SF")
+                .visible(true);
+        map.addMarker(new Marker(markerOptions));
     }
 
     /**
@@ -259,4 +300,14 @@ public class MapApp extends Application implements MapComponentInitializedListen
      */
     private void checkCenter(LatLong center) {
     }
+
+    /**
+     * Convenience method to convert from Coordinate to LatLong
+     * @param   coord   a Coordinate Object
+     * @return          a LatLong Object
+     */
+    private static LatLong convertCoord(Coordinate coord) {
+        return new LatLong(coord.getLat(), coord.getLon());
+    }
+
 }

@@ -49,11 +49,11 @@ public class GTFSParser {
 
         try {
             // Read in all files
-            ArrayList<Map<String, String>> calendar = readCSV(calendarPath);
+            // ArrayList<Map<String, String>> calendar = readCSV(calendarPath);
             ArrayList<Map<String, String>> routes = readCSV(routesPath);
             ArrayList<Map<String, String>> stopTimes = readCSV(stopTimesPath);
             ArrayList<Map<String, String>> stops = readCSV(stopsPath);
-            ArrayList<Map<String, String>> trips = readCSV(tripsPath);
+            // ArrayList<Map<String, String>> trips = readCSV(tripsPath);
 
             // Go through each route, collecting the stops for each
             for (Map<String, String> routeCSV : routes) {
