@@ -127,7 +127,7 @@ public class FeedListener implements Runnable {
      * @return          a hash set containing entity ids
      */
     private static HashSet<String> getEntityIdSet(List<FeedEntity> list) {
-        HashSet<String> set = new HashSet();
+        HashSet<String> set = new HashSet<String>();
         for (FeedEntity entity : list) {
             set.add(entity.getId());
         }
