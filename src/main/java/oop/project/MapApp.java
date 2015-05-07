@@ -241,15 +241,15 @@ public class MapApp extends Application implements MapComponentInitializedListen
         MapOptions options = new MapOptions();
         options.center(center)
                .mapMarker(true)
-               .zoom(13)
-               .overviewMapControl(true)
+               .mapType(MapTypeIdEnum.ROADMAP)
+               .mapTypeControl(true)
+               .overviewMapControl(false)
                .panControl(true)
                .rotateControl(false)
-               .scaleControl(true)
-               .streetViewControl(false)
-               .zoomControl(true)
-               .mapType(MapTypeIdEnum.ROADMAP);
-
+               .scaleControl(false)
+               .streetViewControl(true)
+               .zoom(13)
+               .zoomControl(true);
         //set map using above options
         this.map = this.mapComponent.createMap(options);
     }
