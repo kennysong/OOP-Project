@@ -7,10 +7,12 @@ import java.util.*;
 public class Transit {
     // Private variables for a transit system instance
     private ArrayList<Trajectory> trajectories;
+    private ArrayList<ArrayList<Stop>> stopsByRoute;
 
     /* Constructor method for a transit system */
     public Transit() {
         ArrayList<Trajectory> trajectories = new ArrayList<Trajectory>();
+        ArrayList<ArrayList<Stop>> stopsByRoute = new ArrayList<ArrayList<Stop>>();
 
         try {
             // Open all the GTFS CSV files
@@ -20,14 +22,18 @@ public class Transit {
             URL stopsPath = Transit.class.getResource("bart_gtfs/stops.csv");
             URL tripsPath = Transit.class.getResource("bart_gtfs/trips.csv");
 
-            // Get the trajectories for all the trips
+            // Get the trajectories for all the trips, and all the stations for the transit system
             trajectories = GTFSParser.parseTrips(calendarPath, routesPath,
                 stopTimesPath, stopsPath, tripsPath);
+            stopsByRoute = GTFSParser.getStopsByRoute(calendarPath, routesPath,
+                stopTimesPath, stopsPath, tripsPath);
+
         } catch (Exception e) {
             System.out.println("Invalid file.");
         }
 
         this.trajectories = trajectories;
+        this.stopsByRoute = stopsByRoute;
     }
 
     /* Returns the active trajectories at a specified time */
@@ -42,5 +48,15 @@ public class Transit {
         }
 
         return trajectoryList;
+    }
+
+    /* Returns the trajectories instance variable */
+    public ArrayList<Trajectory> getTrajectories() {
+        return this.trajectories;
+    }
+
+    /* Returns the stopsByRoute instance variable */
+    public ArrayList<ArrayList<Stop>> getStopsByRoute() {
+        return this.stopsByRoute;
     }
 }

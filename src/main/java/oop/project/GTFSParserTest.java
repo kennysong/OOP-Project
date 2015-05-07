@@ -15,8 +15,8 @@ public class GTFSParserTest {
             URL stopsPath = GTFSParserTest.class.getResource("bart_gtfs/stops.csv");
             URL tripsPath = GTFSParserTest.class.getResource("bart_gtfs/trips.csv");
 
-            System.out.print("working...");
             // Get the trajectories for all the trips
+            System.out.println("Running GTFSParser.parseTrips().");
             ArrayList<Trajectory> trajectories = GTFSParser.parseTrips(calendarPath,
                     routesPath, stopTimesPath, stopsPath, tripsPath);
 
@@ -28,22 +28,19 @@ public class GTFSParserTest {
             // Print a single trajectory (the extrapolated trajectories are massive)
             System.out.println(trajectories.get(0));
 
-            // Load them into memory as a list of hash maps
-            // ArrayList<Map<String, String>> calendar = GTFSParser.readCSV(calendarFile);
-            // ArrayList<Map<String, String>> routes = GTFSParser.readCSV(routesFile);
-            // ArrayList<Map<String, String>> stopTimes = GTFSParser.readCSV(stopTimesFile);
-            // ArrayList<Map<String, String>> stops = GTFSParser.readCSV(stopsFile);
-            // ArrayList<Map<String, String>> trips = GTFSParser.readCSV(tripsFile);
+            // Load all stops
+            System.out.println("Running GTFSParser.getStopsByRoute().");
+            ArrayList<ArrayList<Stop>> stopsByRoute = GTFSParser.getStopsByRoute(calendarPath,
+                    routesPath, stopTimesPath, stopsPath, tripsPath);
 
-            // Now print these lists to verify
-            // printCSV(calendar);
-            // printCSV(routes);
-            // printCSV(stopTimes);
-            // printCSV(stops);
-            // printCSV(trips);
+            // Print out the first route
+            ArrayList<Stop> route = stopsByRoute.get(0);
+            for (Stop stop : route) {
+                System.out.println(stop);
+            }
 
         } catch (Exception e) {
-            System.out.println("Invalid file.");
+            System.out.println(e);
         }
     }
 

@@ -40,6 +40,75 @@ public class GTFSParser {
         return trajectories;
     }
 
+    /* Returns a list of lists of stations, where each list of stations is a route */
+    public static ArrayList<ArrayList<Stop>> getStopsByRoute(URL calendarPath,
+            URL routesPath, URL stopTimesPath, URL stopsPath, URL tripsPath) {
+
+        // List of routes, which are lists of stops
+        ArrayList<ArrayList<Stop>> stopsByRoute = new ArrayList<ArrayList<Stop>>();
+
+        try {
+            // Read in all files
+            ArrayList<Map<String, String>> calendar = readCSV(calendarPath);
+            ArrayList<Map<String, String>> routes = readCSV(routesPath);
+            ArrayList<Map<String, String>> stopTimes = readCSV(stopTimesPath);
+            ArrayList<Map<String, String>> stops = readCSV(stopsPath);
+            ArrayList<Map<String, String>> trips = readCSV(tripsPath);
+
+            // Go through each route, collecting the stops for each
+            for (Map<String, String> routeCSV : routes) {
+                ArrayList<Stop> route = new ArrayList<Stop>();
+                int routeID = Integer.parseInt(routeCSV.get("route_id"));
+                String routeName = routeCSV.get("route_long_name");
+                String routeColor = routeCSV.get("route_color");
+
+                // Hardcoded list of trips that correspond to a full route
+                HashMap<Integer, String> routeToTrip = new HashMap<Integer, String>() {{
+                    put(1, "01SFO10");
+                    put(3, "01DCM20");
+                    put(5, "02OAK10");
+                    put(7, "01R11");
+                    put(11, "01DC11");
+                    put(19, "01DCM10");
+                }};
+                String tripID = routeToTrip.get(routeID);
+
+                // Find all the stops that correspond to this trip
+                for (Map<String, String> stopTime : stopTimes) {
+                    if (!tripID.equals(stopTime.get("trip_id"))) { continue; }
+
+                    // Get stop info from CSV
+                    String stopID = stopTime.get("stop_id");
+                    String stopName = null;
+                    String stopURL = null;
+                    Coordinate stopCoords = null;
+                    for (Map<String, String> stop : stops) {
+                        if (!stopID.equals(stop.get("stop_id"))) { continue; }
+
+                        // Get stop info
+                        stopName = stop.get("stop_name");
+                        stopURL = stop.get("stop_url");
+                        stopCoords = new Coordinate(Double.parseDouble(stop.get("stop_lat")),
+                                                    Double.parseDouble(stop.get("stop_lon")));
+                        break;
+                    }
+
+                    // Add stop object to route
+                    route.add(new Stop(routeID, routeName, routeColor, stopID,
+                                       stopName, stopCoords, stopURL));
+                }
+
+                // Add this route to our list of routes
+                stopsByRoute.add(route);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error reading files.");
+        }
+
+        return stopsByRoute;
+    }
+
     /* Returns a map of coordinates for a specific tripId, serviceId */
     public static SortedMap<Long, Coordinate> getTrajectoryMap(String tripId, String serviceId,
             ArrayList<Map<String, String>> calendar, ArrayList<Map<String, String>> routes,
