@@ -34,6 +34,13 @@ public class Trajectory {
         return this.tripId;
     }
 
+    /**
+     * Returns the service id of the instance
+     */
+    public String getServiceId() {
+        return this.serviceId;
+    }
+
     /* Returns boolean of if the trajectory is active at a specific time */
     public boolean isActive(long time) {
         if (this.getPosition(time) != null) {

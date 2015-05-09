@@ -55,6 +55,10 @@ public class GTFSParser {
             ArrayList<Map<String, String>> stops = readCSV(stopsPath);
             // ArrayList<Map<String, String>> trips = readCSV(tripsPath);
 
+            // We offset each route by a certain latitude so they don't overlap
+            double offset = 0.000200;
+            int i = 0;
+
             // Go through each route, collecting the stops for each
             for (Map<String, String> routeCSV : routes) {
                 ArrayList<Stop> route = new ArrayList<Stop>();
@@ -88,8 +92,9 @@ public class GTFSParser {
                         // Get stop info
                         stopName = stop.get("stop_name");
                         stopURL = stop.get("stop_url");
-                        stopCoords = new Coordinate(Double.parseDouble(stop.get("stop_lat")),
-                                                    Double.parseDouble(stop.get("stop_lon")));
+                        double stopLat = Double.parseDouble(stop.get("stop_lat"));
+                        double stopLon = Double.parseDouble(stop.get("stop_lon")) + offset*i;
+                        stopCoords = new Coordinate(stopLat, stopLon);
                         break;
                     }
 
@@ -98,12 +103,15 @@ public class GTFSParser {
                                        stopName, stopCoords, stopURL));
                 }
 
+                // Increase latitude offset for next route
+                i++;
+
                 // Add this route to our list of routes
                 stopsByRoute.add(route);
             }
 
         } catch (IOException e) {
-            System.out.println("Error reading files.");
+            System.out.println(e);
         }
 
         return stopsByRoute;
@@ -149,6 +157,7 @@ public class GTFSParser {
 
         // Finally, extrapolate these trajectories to every second
         trajectoryMap = extrapolateTrajectory(trajectoryMap);
+
         return trajectoryMap;
     }
 
@@ -183,18 +192,18 @@ public class GTFSParser {
         // Iterate through each stop in the trajectory
         for(Map.Entry<Long, Coordinate> entry : trajectoryMap.entrySet()) {
             // End points for current path
-            long time = entry.getKey();
+            long stopTime = entry.getKey();
             Coordinate coordinate = entry.getValue();
 
             // Skip the first point
             if (prevTime == -1) {
-                prevTime = time;
+                prevTime = stopTime;
                 prevCoordinate = coordinate;
                 continue;
             }
 
             // Calculate the extrapolated points for each second, and add into trajectoryMap
-            long dTime = time - prevTime;
+            long dTime = stopTime - prevTime;
             double dLat = (coordinate.getLat() - prevCoordinate.getLat()) / dTime;
             double dLon = (coordinate.getLon() - prevCoordinate.getLon()) / dTime;
             double prevLat = prevCoordinate.getLat();
@@ -202,13 +211,15 @@ public class GTFSParser {
             for (int dt = 1; dt < dTime; dt++) {
                 long currentTime = prevTime + dt;
                 double currentLat = prevLat + dLat;
-                double currentLon = prevLon + dLat;
+                double currentLon = prevLon + dLon;
                 Coordinate currentCoordinate = new Coordinate(currentLat, currentLon);
                 newTrajectoryMap.put(currentTime, currentCoordinate);
 
                 prevLat = currentLat;
                 prevLon = currentLon;
             }
+            prevCoordinate = coordinate;
+            prevTime = stopTime;
         }
 
         return newTrajectoryMap;

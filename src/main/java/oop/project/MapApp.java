@@ -33,6 +33,7 @@ import com.lynden.gmapsfx.javascript.object.MapOptions;
 import com.lynden.gmapsfx.javascript.object.MapTypeIdEnum;
 import com.lynden.gmapsfx.javascript.object.Marker;
 import com.lynden.gmapsfx.javascript.object.MarkerOptions;
+import com.lynden.gmapsfx.javascript.object.MapShape;
 import com.lynden.gmapsfx.shapes.*;
 import com.lynden.gmapsfx.zoom.*;
 
@@ -81,7 +82,27 @@ public class MapApp extends Application implements MapComponentInitializedListen
     /**
      * Container for trajectories
      */
-    // private ArrayList<Trajectory> trajectories = null;
+    private ArrayList<Trajectory> trajectories = null;
+
+    /**
+     * Timer for trajectories
+     */
+    private Timer trajectoryTimer;
+
+    /**
+     * Clock that keeps track of current time for the trajectories in seconds
+     */
+    private long trajectoryClock;
+
+    /**
+     * Interval in seconds for each tick of the clock
+     */
+    private int interval = 10;
+
+    /**
+     * List of active trajectory shapes that are on the map
+     */
+    private ArrayList<Marker> markersOnMap = new ArrayList<Marker>();
 
     // METHODS
     /**
@@ -96,17 +117,26 @@ public class MapApp extends Application implements MapComponentInitializedListen
      * Standard start method for JavaFX Applications
      */
     public void start(Stage stage) {
-        //load BART routes
+        //load BART routes and trajectories
         this.loadRoutes();
+        this.loadTrajectories();
+
         //set title of application
         stage.setTitle("MapApp");
+
         //disable resize (at least, for now)
         stage.setResizable(false);
+
         //initialize the app
         this.initialize();
+
         //set scene and show
         stage.setScene(this.makeScene());
         stage.show();
+
+        //start clock and timer for trajectories
+        this.startTrajectoryClock();
+        this.startTrajectoryTimer();
     }
 
     /**
@@ -121,7 +151,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 URL stopTimesPath = App.class.getResource("bart_gtfs/stop_times.csv");
                 URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
                 URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
-                routes = GTFSParser.getStopsByRoute(calendarPath,
+                MapApp.this.routes = GTFSParser.getStopsByRoute(calendarPath,
                                                     routesPath,
                                                     stopTimesPath,
                                                     stopsPath,
@@ -132,6 +162,103 @@ public class MapApp extends Application implements MapComponentInitializedListen
         });
         th.setDaemon(true);
         th.start();
+    }
+
+    /**
+     * Loads all trajectories
+     */
+    private void loadTrajectories() {
+        System.out.println("Trajectories loading. (This will take a minute.)");
+        Thread th = new Thread(new Task<Void>() {
+            @Override
+            protected Void call() {
+                URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
+                URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
+                URL stopTimesPath = App.class.getResource("bart_gtfs/stop_times.csv");
+                URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
+                URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
+                MapApp.this.trajectories = GTFSParser.parseTrips(calendarPath,
+                                                          routesPath,
+                                                          stopTimesPath,
+                                                          stopsPath,
+                                                          tripsPath);
+                System.out.println("Trajectories loaded.");
+                return null;
+            }
+        });
+        th.setDaemon(true);
+        th.start();
+    }
+
+    /**
+     * Starts instance timer for trajectories.
+     */
+    private void startTrajectoryTimer() {
+        this.trajectoryTimer = new java.util.Timer();
+
+        this.trajectoryTimer.schedule(new TimerTask() {
+            public void run() {
+                 Platform.runLater(new Runnable() {
+                    public void run() {
+                        if (MapApp.this.trajectories != null && MapApp.this.map != null) {
+                            MapApp.this.trajectoryClock += interval;
+                            updateActiveTrajectories();
+                        }
+                    }
+                });
+            }
+        }, 0, 1000);
+    }
+
+    /**
+     * Updates current coordinates of trajectories
+     */
+    private void updateActiveTrajectories() {
+        // Delete previous points
+        for (Marker marker : this.markersOnMap) {
+            this.map.removeMarker(marker);
+        }
+
+        System.out.println(this.trajectoryClock + " ----------------------------------");
+        for (Trajectory trajectory : this.trajectories) {
+            // Skip weekend services for now
+            if (trajectory.getServiceId().equals("SAT") || 
+                    trajectory.getServiceId().equals("SUN")) { continue; }
+
+            // See which trajctories are active at this time
+            Coordinate currentCoord = trajectory.getPosition(this.trajectoryClock);
+            if (currentCoord != null) {
+                System.out.println(trajectory.getTripId() + " " + currentCoord);
+
+                // Draw train on this map as a circle
+                // This is way too slow to function on my computer, but drawing Markers is okay
+                // LatLong centreC = new LatLong(currentCoord.getLat(), currentCoord.getLon());
+                // CircleOptions cOpts = new CircleOptions()
+                //         .center(centreC)
+                //         .radius(500)
+                //         .strokeColor("black")
+                //         .strokeWeight(2)
+                //         .fillColor("black")
+                //         .fillOpacity(1);
+                // Circle c = new Circle(cOpts);
+                // this.map.addMapShape(c);
+
+                // Draw train on this map as a Marker
+                MarkerOptions markerOptions = new MarkerOptions()
+                    .position(new LatLong(currentCoord.getLat(), currentCoord.getLon()));
+                Marker marker = new Marker(markerOptions);
+                this.map.addMarker(marker);
+                this.markersOnMap.add(marker);
+            }
+        }
+    }
+
+    /**
+     * Starts clock in secs for trajectories
+     */
+    private void startTrajectoryClock() {
+        // this.trajectoryClock = GTFSParser.getElapsedTime("07:06:00");
+        this.trajectoryClock = 54360;
     }
 
     /**
@@ -202,8 +329,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     //test
                     case SPACE:
                         if (routes != null) {
-                            double offset = 0.000100;
-                            int i = 0;
                             for (ArrayList<Stop> route : routes) {
                                 //get color of current route
                                 String color = route.get(0).getColor();
@@ -211,7 +336,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
                                 MVCArray lineArray = new MVCArray();
                                 for (Stop s : route) {
                                     Coordinate coord = s.getCoord();
-                                    LatLong loc = new LatLong(coord.getLat() + offset*i, coord.getLon());
+                                    LatLong loc = new LatLong(coord.getLat(), coord.getLon());
                                     lineArray.push(loc);
                                 }
                                 PolylineOptions opts = new PolylineOptions()
@@ -220,7 +345,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
                                         .strokeWeight(5);
                                 Polyline line = new Polyline(opts);
                                 map.addMapShape(line);
-                                i++;
                             }
                         } else {
                             System.out.println("oop");
@@ -258,12 +382,13 @@ public class MapApp extends Application implements MapComponentInitializedListen
     }
 
     /**
-     * Initializes the acutal map. Automaticalled called when has been loaded.
+     * Initializes the actual map. Automatically called when has been loaded.
      */
     public void mapInitialized() {
         //Once the map has been loaded by the Webview, initialize the map details.
         //using lat lon for SF
-        LatLong center = new LatLong(37.773972, -122.431297);
+        // LatLong center = new LatLong(37.773972, -122.431297);
+        LatLong center = new LatLong(37.733972, -122.251297);
 
         //not sure what this does yet
         this.mapComponent.addMapReadyListener(() -> {
@@ -282,7 +407,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
                .rotateControl(false)
                .scaleControl(false)
                .streetViewControl(true)
-               .zoom(13)
+               .zoom(11)
                .zoomControl(true);
         //set map using above options
         this.map = this.mapComponent.createMap(options);
