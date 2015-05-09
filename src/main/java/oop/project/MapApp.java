@@ -6,8 +6,7 @@ import java.util.*;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
-import javafx.concurrent.ScheduledService;
+import javafx.concurrent.*;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -21,6 +20,9 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 import netscape.javascript.JSObject;
+
+import com.google.transit.realtime.GtfsRealtime.FeedEntity;
+import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 
 import com.lynden.gmapsfx.*;
 import com.lynden.gmapsfx.elevation.*;
@@ -93,6 +95,21 @@ public class MapApp extends Application implements MapComponentInitializedListen
     // private Timer trajectoryTimer;
 
     /**
+     * Scheduled service to update the trajectories
+     */
+    private ScheduledService<Void> trajectoryService;
+
+    /**
+     * Scheduled service to continually get realtime update
+     */
+    private ScheduledService<Void> bartService;
+
+    /**
+     * Container for the feed entities
+     */
+    private List<FeedEntity> currentEntities = null;
+
+    /**
      * Clock that keeps track of current time for the trajectories in seconds
      */
     private long trajectoryClock;
@@ -124,6 +141,17 @@ public class MapApp extends Application implements MapComponentInitializedListen
         this.loadRoutes();
         this.loadTrajectories();
 
+        //start clock for trajectories
+        this.startTrajectoryClock();
+
+        //create services
+        this.createTrajectoryService();
+        this.createBartService();
+
+        //start services
+        this.trajectoryService.start();
+        this.bartService.start();
+
         //set title of application
         stage.setTitle("MapApp");
 
@@ -136,10 +164,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //set scene and show
         stage.setScene(this.makeScene());
         stage.show();
-
-        //start clock and timer for trajectories
-        this.startTrajectoryClock();
-        this.startTrajectoryService();
     }
 
     /**
@@ -192,16 +216,18 @@ public class MapApp extends Application implements MapComponentInitializedListen
     }
 
     /**
-     * Starts instance timer for trajectories.
+     * Creates a scheduled service to update the trajectories every second
      */
-    private void startTrajectoryService() {
-        ScheduledService<Void> svc = new ScheduledService<Void>() {
+    private void createTrajectoryService() {
+        this.trajectoryService = new ScheduledService<Void>() {
             protected Task<Void> createTask() {
                 return new Task<Void>() {
                     protected Void call() {
                         Platform.runLater(new Runnable() {
                             public void run() {
-                                if (MapApp.this.trajectories != null && MapApp.this.map != null) {
+                                if (MapApp.this.trajectories != null &&
+                                        MapApp.this.map != null &&
+                                        MapApp.this.bartService.getState() != Worker.State.RUNNING) {
                                     MapApp.this.trajectoryClock += interval;
                                     MapApp.this.updateActiveTrajectories();
                                 }
@@ -212,8 +238,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 };
             }
         };
-        svc.setPeriod(Duration.seconds(1));
-        svc.start();
+        this.trajectoryService.setPeriod(Duration.seconds(1));
         // this.trajectoryTimer = new java.util.Timer();
 
         // this.trajectoryTimer.schedule(new TimerTask() {
@@ -228,6 +253,29 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //         });
         //     }
         // }, 0, 1000);
+    }
+
+    /**
+     * Creates a scheduled service to get bart realtime updates every minute
+     */
+    private void createBartService() {
+        this.bartService = new ScheduledService<Void>() {
+            protected Task<Void> createTask() {
+                return new Task<Void>() {
+                    protected Void call() {
+                        try {
+                            URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
+                            MapApp.this.currentEntities = FeedMessage.parseFrom(url.openStream()).getEntityList();
+                            System.out.println(MapApp.this.currentEntities);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                };
+            }
+        };
+        this.bartService.setPeriod(Duration.seconds(60));
     }
 
     /**
@@ -346,29 +394,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     case ESCAPE:
                         Platform.exit();
                         break;
-                    //test (move to mapInitialized later)
-                    case SPACE:
-                        if (MapApp.this.routes != null) {
-                            for (ArrayList<Stop> route : MapApp.this.routes) {
-                                //get color of current route
-                                String color = route.get(0).getColor();
-                                //build array
-                                MVCArray lineArray = new MVCArray();
-                                for (Stop s : route) {
-                                    Coordinate coord = s.getCoord();
-                                    LatLong loc = new LatLong(coord.getLat(), coord.getLon());
-                                    lineArray.push(loc);
-                                }
-                                PolylineOptions opts = new PolylineOptions()
-                                        .path(lineArray)
-                                        .strokeColor(color)
-                                        .strokeWeight(5);
-                                Polyline line = new Polyline(opts);
-                                MapApp.this.map.addMapShape(line);
-                            }
-                        } else {
-                            System.out.println("oop");
-                        }
                 }
             }
         });
@@ -408,11 +433,31 @@ public class MapApp extends Application implements MapComponentInitializedListen
         this.map = this.mapComponent.createMap(options);
 
         //create and add marker for SF
-        MarkerOptions markerOptions = new MarkerOptions()
-                .position(center)
-                .title("SF")
-                .visible(true);
-        map.addMarker(new Marker(markerOptions));
+        // MarkerOptions markerOptions = new MarkerOptions()
+        //         .position(center)
+        //         .title("SF")
+        //         .visible(true);
+        // map.addMarker(new Marker(markerOptions));
+
+        //draw lines
+        for (ArrayList<Stop> route : MapApp.this.routes) {
+            //get color of current route
+            String color = route.get(0).getColor();
+            //build array
+            MVCArray lineArray = new MVCArray();
+            for (Stop s : route) {
+                Coordinate coord = s.getCoord();
+                LatLong loc = new LatLong(coord.getLat(), coord.getLon());
+                lineArray.push(loc);
+            }
+            PolylineOptions opts = new PolylineOptions()
+                    .path(lineArray)
+                    .strokeColor(color)
+                    .strokeWeight(4);
+            Polyline line = new Polyline(opts);
+            MapApp.this.map.addMapShape(line);
+        }
+
     }
 
     /**
