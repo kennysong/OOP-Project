@@ -52,7 +52,6 @@ public class App {
         System.out.println("done");
 
         FeedListener bartTrips = new FeedListener("http://api.bart.gov/gtfsrt/tripupdate.aspx");
-        // FeedListener bartTrips = new FeedListener("http://developer.mbta.com/lib/GTRTFS/Alerts/VehiclePositions.pb");
         Thread updateThread = new Thread(bartTrips);
         updateThread.start();
         List<FeedEntity> entities;
