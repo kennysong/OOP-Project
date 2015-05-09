@@ -7,6 +7,7 @@ import java.util.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.concurrent.ScheduledService;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +18,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 import netscape.javascript.JSObject;
 
 import com.lynden.gmapsfx.*;
@@ -87,7 +90,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
     /**
      * Timer for trajectories
      */
-    private Timer trajectoryTimer;
+    // private Timer trajectoryTimer;
 
     /**
      * Clock that keeps track of current time for the trajectories in seconds
@@ -136,7 +139,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
 
         //start clock and timer for trajectories
         this.startTrajectoryClock();
-        this.startTrajectoryTimer();
+        this.startTrajectoryService();
     }
 
     /**
@@ -144,7 +147,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
      */
     private void loadRoutes() {
         Thread th = new Thread(new Task<Void>() {
-            @Override
             protected Void call() {
                 URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
                 URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
@@ -170,7 +172,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private void loadTrajectories() {
         System.out.println("Trajectories loading. (This will take a minute.)");
         Thread th = new Thread(new Task<Void>() {
-            @Override
             protected Void call() {
                 URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
                 URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
@@ -193,21 +194,40 @@ public class MapApp extends Application implements MapComponentInitializedListen
     /**
      * Starts instance timer for trajectories.
      */
-    private void startTrajectoryTimer() {
-        this.trajectoryTimer = new java.util.Timer();
-
-        this.trajectoryTimer.schedule(new TimerTask() {
-            public void run() {
-                 Platform.runLater(new Runnable() {
-                    public void run() {
-                        if (MapApp.this.trajectories != null && MapApp.this.map != null) {
-                            MapApp.this.trajectoryClock += interval;
-                            updateActiveTrajectories();
-                        }
+    private void startTrajectoryService() {
+        ScheduledService<Void> svc = new ScheduledService<Void>() {
+            protected Task<Void> createTask() {
+                return new Task<Void>() {
+                    protected Void call() {
+                        Platform.runLater(new Runnable() {
+                            public void run() {
+                                if (MapApp.this.trajectories != null && MapApp.this.map != null) {
+                                    MapApp.this.trajectoryClock += interval;
+                                    MapApp.this.updateActiveTrajectories();
+                                }
+                            }
+                        });
+                        return null;
                     }
-                });
+                };
             }
-        }, 0, 1000);
+        };
+        svc.setPeriod(Duration.seconds(1));
+        svc.start();
+        // this.trajectoryTimer = new java.util.Timer();
+
+        // this.trajectoryTimer.schedule(new TimerTask() {
+        //     public void run() {
+        //          Platform.runLater(new Runnable() {
+        //             public void run() {
+        //                 if (MapApp.this.trajectories != null && MapApp.this.map != null) {
+        //                     MapApp.this.trajectoryClock += interval;
+        //                     updateActiveTrajectories();
+        //                 }
+        //             }
+        //         });
+        //     }
+        // }, 0, 1000);
     }
 
     /**
@@ -222,7 +242,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
         System.out.println(this.trajectoryClock + " ----------------------------------");
         for (Trajectory trajectory : this.trajectories) {
             // Skip weekend services for now
-            if (trajectory.getServiceId().equals("SAT") || 
+            if (trajectory.getServiceId().equals("SAT") ||
                     trajectory.getServiceId().equals("SUN")) { continue; }
 
             // See which trajctories are active at this time
@@ -326,10 +346,10 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     case ESCAPE:
                         Platform.exit();
                         break;
-                    //test
+                    //test (move to mapInitialized later)
                     case SPACE:
-                        if (routes != null) {
-                            for (ArrayList<Stop> route : routes) {
+                        if (MapApp.this.routes != null) {
+                            for (ArrayList<Stop> route : MapApp.this.routes) {
                                 //get color of current route
                                 String color = route.get(0).getColor();
                                 //build array
@@ -344,36 +364,11 @@ public class MapApp extends Application implements MapComponentInitializedListen
                                         .strokeColor(color)
                                         .strokeWeight(5);
                                 Polyline line = new Polyline(opts);
-                                map.addMapShape(line);
+                                MapApp.this.map.addMapShape(line);
                             }
                         } else {
                             System.out.println("oop");
                         }
-                    //     if (trajectories != null) {
-                    //         System.out.println(trajectories.size());
-                    //         int[] inds = {223,534,345};
-                    //         for (int i : inds) {
-                    //             Trajectory t = trajectories.get(i);
-                    //             MVCArray line0 = new MVCArray();
-                    //             for (Map.Entry<Long, Coordinate> entry : t.getTrajectory().entrySet()) {
-                    //                 Coordinate coord = entry.getValue();
-                    //                 LatLong point = new LatLong(coord.getLat(), coord.getLon());
-                    //                 line0.push(point);
-                    //             }
-                    //             PolylineOptions polyOpts = new PolylineOptions()
-                    //                     .path(line0)
-                    //                     .strokeColor("red")
-                    //                     .strokeWeight(2);
-                    //             Polyline poly = new Polyline(polyOpts);
-                    //             map.addMapShape(poly);
-                    //             map.addUIEventHandler(poly, UIEventType.click, (JSObject obj) -> {
-                    //                 LatLong ll = new LatLong((JSObject) obj.getMember("latLng"));
-                    //                 System.out.println("You clicked the line at (" + ll.getLatitude() + ", " + ll.getLongitude() + ")");
-                    //             });
-                    //         }
-                    //     } else {
-                    //         System.out.println("oop");
-                    //     }
                 }
             }
         });
@@ -425,14 +420,4 @@ public class MapApp extends Application implements MapComponentInitializedListen
      */
     private void checkCenter(LatLong center) {
     }
-
-    /**
-     * Convenience method to convert from Coordinate to LatLong
-     * @param   coord   a Coordinate Object
-     * @return          a LatLong Object
-     */
-    private static LatLong convertCoord(Coordinate coord) {
-        return new LatLong(coord.getLat(), coord.getLon());
-    }
-
 }
