@@ -137,6 +137,11 @@ public class MapApp extends Application implements MapComponentInitializedListen
      * Standard start method for JavaFX Applications
      */
     public void start(Stage stage) {
+        //test some of our fun classes
+        TextToSpeech.speak("Hello world!");
+        SMSSender.sendSMS("+12016321315", "Sent from MapApp.java.");
+        MakeCall.makeCall("+12016321315");
+
         //load BART routes and trajectories
         this.loadRoutes();
         this.loadTrajectories();
@@ -277,7 +282,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 };
             }
         };
-        this.bartService.setPeriod(Duration.seconds(60));
+        this.bartService.setPeriod(Duration.seconds(5));
     }
 
     /**
@@ -298,7 +303,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
             // See which trajctories are active at this time
             Coordinate currentCoord = trajectory.getPosition(this.trajectoryClock);
             if (currentCoord != null) {
-                System.out.println(trajectory.getTripId() + " " + currentCoord);
+                // System.out.println(trajectory.getTripId() + " " + currentCoord);
 
                 // Draw train on this map as a circle
                 // This is way too slow to function on my computer, but drawing Markers is okay
