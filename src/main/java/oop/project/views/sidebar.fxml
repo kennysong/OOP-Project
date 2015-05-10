@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
+<?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
@@ -7,10 +9,39 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="320.0" style="-fx-background-color: gray;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="oop.project.views.SidebarController">
    <children>
-      <Label fx:id="title" alignment="CENTER" contentDisplay="CENTER" layoutX="117.0" layoutY="106.0" text="BART Notifier" textAlignment="CENTER" AnchorPane.leftAnchor="73.5" AnchorPane.rightAnchor="73.5" AnchorPane.topAnchor="20.0">
+      <Label alignment="CENTER" contentDisplay="CENTER" layoutX="73.5" layoutY="25.0" text="BART Notifier" textAlignment="CENTER" AnchorPane.leftAnchor="73.5" AnchorPane.rightAnchor="73.5" AnchorPane.topAnchor="25.0">
          <font>
             <Font name="System Bold" size="26.0" />
          </font>
       </Label>
+      <Label layoutY="83.0" prefHeight="40.0" prefWidth="280.0" text="Click the station you want to leave from. I'll let you know when it's almost time to go!" textAlignment="CENTER" wrapText="true" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="75.0">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <VBox alignment="BASELINE_LEFT" layoutX="25.0" layoutY="136.0" prefHeight="314.0" prefWidth="270.0" spacing="20.0" AnchorPane.bottomAnchor="270.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="136.0">
+         <children>
+            <Label text="Selected Station:" />
+            <Label fx:id="station" text="Pick a station!">
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+            <Label text="What should I do?" />
+            <RadioButton fx:id="textRadio" mnemonicParsing="false" text="Text Me">
+               <toggleGroup>
+                  <ToggleGroup fx:id="radioGroup" />
+               </toggleGroup></RadioButton>
+            <RadioButton fx:id="callRadio" mnemonicParsing="false" text="Call Me" toggleGroup="$radioGroup" />
+            <Label text="How should I contact you?" />
+            <TextField fx:id="phoneNumber" maxWidth="-Infinity" prefHeight="26.0" prefWidth="130.0" promptText="+12345678888" />
+            <Button fx:id="confirmButton" alignment="CENTER" mnemonicParsing="false" onMouseClicked="#summarize" text="Confirm!" />
+         </children>
+      </VBox>
+      <Label layoutX="25.0" layoutY="465.0" text="Summary:" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="465.0" />
+      <Label fx:id="summary" layoutX="25.0" layoutY="501.0" text="Press confirm to make sure I let you know!" wrapText="true" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="501.0" />
    </children>
 </AnchorPane>

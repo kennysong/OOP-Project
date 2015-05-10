@@ -49,7 +49,7 @@ public class Stop {
 
     /**
      * Get this stop's route color
-     * @return          string represending the color of the containing route
+     * @return          string representing the color of the containing route
      */
     public String getColor() {
         return this.routeColor;
@@ -63,4 +63,11 @@ public class Stop {
         return this.stopCoords;
     }
 
+    /**
+     * Get this stop's name
+     * @return          string representing the name of the stop
+     */
+    public String getName() {
+        return this.stopName + " (" + this.stopID + ")";
+    }
 }

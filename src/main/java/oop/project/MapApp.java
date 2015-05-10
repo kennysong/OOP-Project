@@ -75,14 +75,14 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private SidebarController controller;
 
     /**
-     * Single FXMLLoader for all *.fxml resources
-     */
-    private FXMLLoader fin = new FXMLLoader();
-
-    /**
      * Container for each route's stops
      */
     private ArrayList<ArrayList<Stop>> routes = null;
+
+    /**
+     * User selected stop
+     */
+    private Stop selectedStop = null;
 
     /**
      * Container for trajectories
@@ -263,13 +263,15 @@ public class MapApp extends Application implements MapComponentInitializedListen
             protected Task<Void> createTask() {
                 return new Task<Void>() {
                     protected Void call() {
-                        try {
-                            URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
-                            MapApp.this.currentEntities = FeedMessage.parseFrom(url.openStream()).getEntityList();
-                            System.out.println(MapApp.this.currentEntities);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        while (MapApp.this.currentEntities == null) {
+                            try {
+                                URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
+                                MapApp.this.currentEntities = FeedMessage.parseFrom(url.openStream()).getEntityList();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
+                        // System.out.println(MapApp.this.currentEntities);
                         return null;
                     }
                 };
@@ -350,7 +352,9 @@ public class MapApp extends Application implements MapComponentInitializedListen
      */
     private void loadRoot() {
         try {
-            this.rootLayout = (BorderPane) this.fin.load(MapApp.class.getResource("views/root.fxml"));
+            FXMLLoader fin = new FXMLLoader();
+            fin.setLocation(MapApp.class.getResource("views/root.fxml"));
+            this.rootLayout = (BorderPane) fin.load();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -362,9 +366,12 @@ public class MapApp extends Application implements MapComponentInitializedListen
      */
     private void loadSidebar() {
         try {
-            this.sidebar = (AnchorPane) this.fin.load(MapApp.class.getResource("views/sidebar.fxml"));
+            FXMLLoader fin = new FXMLLoader();
+            fin.setLocation(MapApp.class.getResource("views/sidebar.fxml"));
+            this.sidebar = (AnchorPane) fin.load();
             //add sidebar controller
-            this.controller = this.fin.getController();
+            this.controller = fin.getController();
+            this.controller.setMainApp(this);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -393,6 +400,10 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     //exit on ESCAPE
                     case ESCAPE:
                         Platform.exit();
+                        break;
+                    case SPACE:
+                        MapApp.this.trajectoryService.cancel();
+                        System.out.println(MapApp.this.trajectoryService.isRunning());
                         break;
                 }
             }
@@ -456,13 +467,57 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     .strokeWeight(4);
             Polyline line = new Polyline(opts);
             MapApp.this.map.addMapShape(line);
+            MapApp.this.map.addUIEventHandler(line, UIEventType.click, (JSObject obj) -> {
+                LatLong click = new LatLong((JSObject) obj.getMember("latLng"));
+                MapApp.this.selectedStop = MapApp.this.findStop(click, route);
+                MapApp.this.controller.station.setText(MapApp.this.selectedStop.getName());
+            });
         }
+    }
 
+    /**
+     * Finds and returns the closest Stop to a location, from a list of Stops
+     * @param   loc     a LatLong Object representing a location
+     * @param   stops   a list of Stops
+     * @return          the Stop closest to loc
+     */
+    private Stop findStop(LatLong loc, ArrayList<Stop> stops) {
+        Stop closestStop = stops.get(0);
+        double stopDistance = this.distanceBetween(loc, closestStop.getCoord().toLatLong());
+        for (int i = 1; i < stops.size(); i++) {
+            Stop tmpStop = stops.get(i);
+            double tmpDistance = this.distanceBetween(loc, tmpStop.getCoord().toLatLong());
+            if (tmpDistance < stopDistance) {
+                closestStop = tmpStop;
+                stopDistance = tmpDistance;
+            }
+        }
+        return closestStop;
+    }
+
+    /**
+     * Calculates the distance between LatLong coordinates using equirectangular approximation
+     * @param   loc1    the first LatLong Object
+     * @param   loc2    the second LatLong Object
+     */
+    private double distanceBetween(LatLong loc1, LatLong loc2) {
+        double dLat, dLon;
+        dLat = loc2.latToRadians() - loc1.latToRadians();
+        dLon = (loc2.longToRadians() - loc1.longToRadians())*Math.cos(0.5*(loc1.latToRadians() + loc2.latToRadians()));
+        return Math.sqrt(dLat*dLat + dLon*dLon);
     }
 
     /**
      * Taken from GMapsFX Example.
      */
     private void checkCenter(LatLong center) {
+    }
+
+    /**
+     * Returns the this.selectedStop. If no stop is selected, null is returned.
+     * @return          the selected Stop
+     */
+    public Stop getSelectedStop() {
+        return this.selectedStop;
     }
 }

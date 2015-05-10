@@ -1,5 +1,7 @@
 package oop.project;
 
+import com.lynden.gmapsfx.javascript.object.LatLong;
+
 public class Coordinate {
     // Private instance variables for a Coordinate object
     private double lat;
@@ -24,5 +26,13 @@ public class Coordinate {
     /* Converts coordinate to a string representation */
     public String toString() {
         return "(" + lat + ", " + lon + ")";
+    }
+
+    /**
+     * Convenience to convert from Coordinate to LatLong
+     * @return          a LatLong Object
+     */
+    public LatLong toLatLong() {
+        return new LatLong(this.lat, this.lon);
     }
 }
