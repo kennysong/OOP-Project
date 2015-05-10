@@ -24,6 +24,16 @@ dependencies {
     compile 'com.google.transit:gtfs-realtime-bindings:0.0.4'
     compile 'com.twilio.sdk:twilio-java-sdk:4.0.2'
     compile 'com.lynden:GMapsFX:1.1.1'
+
+    compile files('lib/cmu_time_awb.jar')
+    compile files('lib/cmu_us_kal.jar')
+    compile files('lib/cmudict04.jar')
+    compile files('lib/cmulex.jar')
+    compile files('lib/cmutimelex.jar')
+    compile files('lib/en_us.jar')
+    compile files('lib/freetts-jsapi10.jar')
+    compile files('lib/freetts.jar')
+    compile files('lib/mbrola.jar')
 }
 
 //custom settings and tasks
