@@ -138,9 +138,9 @@ public class MapApp extends Application implements MapComponentInitializedListen
      */
     public void start(Stage stage) {
         //test some of our fun classes
-        TextToSpeech.speak("Hello world!");
-        SMSSender.sendSMS("+12016321315", "Sent from MapApp.java.");
-        MakeCall.makeCall("+12016321315");
+        // TextToSpeech.speak("Hello world!");
+        // SMSSender.sendSMS("+12016321315", "Sent from MapApp.java.");
+        // MakeCall.makeCall("+12016321315");
 
         //load BART routes and trajectories
         this.loadRoutes();

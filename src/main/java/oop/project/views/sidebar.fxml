@@ -42,6 +42,9 @@
          </children>
       </VBox>
       <Label layoutX="25.0" layoutY="465.0" text="Summary:" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="465.0" />
-      <Label fx:id="summary" layoutX="25.0" layoutY="501.0" text="Press confirm to make sure I let you know!" wrapText="true" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="501.0" />
+      <Label fx:id="summary" layoutX="25.0" layoutY="501.0" text="Press confirm to make sure I let you know!" wrapText="true" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="501.0">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font></Label>
    </children>
 </AnchorPane>
