@@ -42,7 +42,9 @@ import com.lynden.gmapsfx.javascript.object.MapShape;
 import com.lynden.gmapsfx.shapes.*;
 import com.lynden.gmapsfx.zoom.*;
 
-import oop.project.views.SidebarController;
+import oop.project.model.*;
+import oop.project.view.SidebarController;
+import oop.project.util.*;
 
 /**
  * JavaFX Application that uses Google Maps via GMapsFX
@@ -177,11 +179,11 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private void loadRoutes() {
         Thread th = new Thread(new Task<Void>() {
             protected Void call() {
-                URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
-                URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
-                URL stopTimesPath = App.class.getResource("bart_gtfs/stop_times.csv");
-                URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
-                URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
+                URL calendarPath = MapApp.class.getResource("bart_gtfs/calendar.csv");
+                URL routesPath = MapApp.class.getResource("bart_gtfs/routes.csv");
+                URL stopTimesPath = MapApp.class.getResource("bart_gtfs/stop_times.csv");
+                URL stopsPath = MapApp.class.getResource("bart_gtfs/stops.csv");
+                URL tripsPath = MapApp.class.getResource("bart_gtfs/trips.csv");
                 MapApp.this.routes = GTFSParser.getStopsByRoute(calendarPath,
                                                     routesPath,
                                                     stopTimesPath,
@@ -202,11 +204,11 @@ public class MapApp extends Application implements MapComponentInitializedListen
         System.out.println("Trajectories loading. (This will take a minute.)");
         Thread th = new Thread(new Task<Void>() {
             protected Void call() {
-                URL calendarPath = App.class.getResource("bart_gtfs/calendar.csv");
-                URL routesPath = App.class.getResource("bart_gtfs/routes.csv");
-                URL stopTimesPath = App.class.getResource("bart_gtfs/stop_times.csv");
-                URL stopsPath = App.class.getResource("bart_gtfs/stops.csv");
-                URL tripsPath = App.class.getResource("bart_gtfs/trips.csv");
+                URL calendarPath = MapApp.class.getResource("bart_gtfs/calendar.csv");
+                URL routesPath = MapApp.class.getResource("bart_gtfs/routes.csv");
+                URL stopTimesPath = MapApp.class.getResource("bart_gtfs/stop_times.csv");
+                URL stopsPath = MapApp.class.getResource("bart_gtfs/stops.csv");
+                URL tripsPath = MapApp.class.getResource("bart_gtfs/trips.csv");
                 MapApp.this.trajectories = GTFSParser.parseTrips(calendarPath,
                                                           routesPath,
                                                           stopTimesPath,
@@ -358,7 +360,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private void loadRoot() {
         try {
             FXMLLoader fin = new FXMLLoader();
-            fin.setLocation(MapApp.class.getResource("views/root.fxml"));
+            fin.setLocation(MapApp.class.getResource("view/root.fxml"));
             this.rootLayout = (BorderPane) fin.load();
         } catch (IOException e) {
             e.printStackTrace();
@@ -372,7 +374,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private void loadSidebar() {
         try {
             FXMLLoader fin = new FXMLLoader();
-            fin.setLocation(MapApp.class.getResource("views/sidebar.fxml"));
+            fin.setLocation(MapApp.class.getResource("view/sidebar.fxml"));
             this.sidebar = (AnchorPane) fin.load();
             //add sidebar controller
             this.controller = fin.getController();

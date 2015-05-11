@@ -1,4 +1,4 @@
-package oop.project.views;
+package oop.project.view;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;

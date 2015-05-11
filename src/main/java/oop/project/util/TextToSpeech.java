@@ -1,4 +1,4 @@
-package oop.project;
+package oop.project.util;
 
 import com.sun.speech.freetts.Voice;
 import com.sun.speech.freetts.VoiceManager;

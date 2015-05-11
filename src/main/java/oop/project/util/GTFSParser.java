@@ -1,9 +1,10 @@
-package oop.project;
+package oop.project.util;
 
 import java.io.*;
 import java.net.URL;
 import java.text.*;
 import java.util.*;
+import oop.project.model.*;
 
 public class GTFSParser {
     /* Returns a list of trajectories of various trips */

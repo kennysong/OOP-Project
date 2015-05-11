@@ -1,4 +1,4 @@
-package oop.project;
+package oop.project.model;
 
 import java.util.*;
 
