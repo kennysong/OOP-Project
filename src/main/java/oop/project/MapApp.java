@@ -3,6 +3,7 @@ package oop.project;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -92,11 +93,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private ArrayList<Trajectory> trajectories = null;
 
     /**
-     * Timer for trajectories
-     */
-    // private Timer trajectoryTimer;
-
-    /**
      * Scheduled service to update the trajectories
      */
     private ScheduledService<Void> trajectoryService;
@@ -117,14 +113,24 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private long trajectoryClock;
 
     /**
-     * Interval in seconds for each tick of the clock
+     * Interval in seconds for each tick of the clock, set in startTrajectoryClock()
      */
-    private int interval = 10;
+    private int clockInterval;
 
     /**
-     * List of active trajectory shapes that are on the map
+     * List of active trajectory markers that are on the map
      */
     private ArrayList<Marker> markersOnMap = new ArrayList<Marker>();
+
+    /**
+     * List of active trips from the real time feed
+     */
+    private ArrayList<String> feedActiveTrips = new ArrayList<String>();
+
+    /**
+     * Toggle for if the map is real time or not
+     */
+    private boolean isRealTime = false;
 
     // METHODS
     /**
@@ -151,24 +157,18 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //start clock for trajectories
         this.startTrajectoryClock();
 
-        //create services
+        //create and start services
         this.createTrajectoryService();
         this.createBartService();
-
-        //start services
         this.trajectoryService.start();
         this.bartService.start();
-
-        //set title of application
-        stage.setTitle("MapApp");
-
-        //disable resize (at least, for now)
-        stage.setResizable(false);
 
         //initialize the app
         this.initialize();
 
         //set scene and show
+        stage.setTitle("BART Interactive Visualization");
+        stage.setResizable(false);
         stage.setScene(this.makeScene());
         stage.show();
     }
@@ -232,10 +232,8 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     protected Void call() {
                         Platform.runLater(new Runnable() {
                             public void run() {
-                                if (MapApp.this.trajectories != null &&
-                                        MapApp.this.map != null &&
-                                        MapApp.this.bartService.getState() != Worker.State.RUNNING) {
-                                    MapApp.this.trajectoryClock += interval;
+                                if (MapApp.this.trajectories != null && MapApp.this.map != null &&
+                                    MapApp.this.bartService.getState() != Worker.State.RUNNING) {
                                     MapApp.this.updateActiveTrajectories();
                                 }
                             }
@@ -246,20 +244,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
             }
         };
         this.trajectoryService.setPeriod(Duration.seconds(1));
-        // this.trajectoryTimer = new java.util.Timer();
-
-        // this.trajectoryTimer.schedule(new TimerTask() {
-        //     public void run() {
-        //          Platform.runLater(new Runnable() {
-        //             public void run() {
-        //                 if (MapApp.this.trajectories != null && MapApp.this.map != null) {
-        //                     MapApp.this.trajectoryClock += interval;
-        //                     updateActiveTrajectories();
-        //                 }
-        //             }
-        //         });
-        //     }
-        // }, 0, 1000);
     }
 
     /**
@@ -270,15 +254,21 @@ public class MapApp extends Application implements MapComponentInitializedListen
             protected Task<Void> createTask() {
                 return new Task<Void>() {
                     protected Void call() {
-                        while (MapApp.this.currentEntities == null) {
-                            try {
-                                URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
-                                MapApp.this.currentEntities = FeedMessage.parseFrom(url.openStream()).getEntityList();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                        // If not real time, don't bother fetching the data
+                        if (!MapApp.this.isRealTime) { return null; }
+
+                        // Fetch data from BART feed
+                        try {
+                            URL url = new URL("http://api.bart.gov/gtfsrt/tripupdate.aspx");
+                            MapApp.this.currentEntities = FeedMessage.parseFrom(url.openStream()).getEntityList();
+                        } catch (Exception e) { e.printStackTrace(); }
+
+                        // Update feedActiveTrips with the latest feed data
+                        MapApp.this.feedActiveTrips = new ArrayList<String>();
+                        for (FeedEntity entity : MapApp.this.currentEntities) {
+                            MapApp.this.feedActiveTrips.add(entity.getId());
                         }
-                        // System.out.println(MapApp.this.currentEntities);
+
                         return null;
                     }
                 };
@@ -288,15 +278,18 @@ public class MapApp extends Application implements MapComponentInitializedListen
     }
 
     /**
-     * Updates current coordinates of trajectories
+     * Updates trajectoryClock and current coordinates of trajectories
      */
     private void updateActiveTrajectories() {
+        // Update trajectory clock
+        this.trajectoryClock += this.clockInterval;
+
         // Delete previous points
         for (Marker marker : this.markersOnMap) {
             this.map.removeMarker(marker);
         }
 
-        System.out.println(this.trajectoryClock + " ----------------------------------");
+        System.out.println("Current trajectory clock: " + this.trajectoryClock);
         for (Trajectory trajectory : this.trajectories) {
             // Skip weekend services for now
             if (trajectory.getServiceId().equals("SAT") ||
@@ -305,20 +298,13 @@ public class MapApp extends Application implements MapComponentInitializedListen
             // See which trajctories are active at this time
             Coordinate currentCoord = trajectory.getPosition(this.trajectoryClock);
             if (currentCoord != null) {
-                // System.out.println(trajectory.getTripId() + " " + currentCoord);
-
-                // Draw train on this map as a circle
-                // This is way too slow to function on my computer, but drawing Markers is okay
-                // LatLong centreC = new LatLong(currentCoord.getLat(), currentCoord.getLon());
-                // CircleOptions cOpts = new CircleOptions()
-                //         .center(centreC)
-                //         .radius(500)
-                //         .strokeColor("black")
-                //         .strokeWeight(2)
-                //         .fillColor("black")
-                //         .fillOpacity(1);
-                // Circle c = new Circle(cOpts);
-                // this.map.addMapShape(c);
+                // If real time, match active trip IDs to the latest feed data
+                if (this.isRealTime) {
+                    if (!this.feedActiveTrips.contains(trajectory.getTripId())) {
+                        System.out.println("GTFS scheduled trip not in real time feed: " + trajectory.getTripId());
+                        continue;
+                    }
+                }
 
                 // Draw train on this map as a Marker
                 MarkerOptions markerOptions = new MarkerOptions()
@@ -331,11 +317,26 @@ public class MapApp extends Application implements MapComponentInitializedListen
     }
 
     /**
-     * Starts clock in secs for trajectories
+     * Starts clock in secs for trajectories and sets this.clockInterval
      */
     private void startTrajectoryClock() {
-        // this.trajectoryClock = GTFSParser.getElapsedTime("07:06:00");
-        this.trajectoryClock = 54360;
+        if (this.isRealTime) {
+            // Set clock to current time in SF
+            Calendar c = new GregorianCalendar(TimeZone.getTimeZone("PST"));
+            String timeStr = String.format("%02d:%02d:%02d", c.get(Calendar.HOUR), 
+                                    c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
+            this.trajectoryClock = GTFSParser.getElapsedTime(timeStr);
+            System.out.println("Current time in SF: " + timeStr + " (" + this.trajectoryClock + ")");
+
+            // Set clock interval to 1 second for real time animation
+            this.clockInterval = 1;
+        } else {
+            // Set clock to 8:00am SF time
+            this.trajectoryClock = GTFSParser.getElapsedTime("07:06:00");
+
+            // Set clock interval to 10 seconds for faster animation
+            this.clockInterval = 10;
+        }
     }
 
     /**
