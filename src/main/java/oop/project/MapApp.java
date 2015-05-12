@@ -324,8 +324,9 @@ public class MapApp extends Application implements MapComponentInitializedListen
                         LatLong currentLatLong = new LatLong(currentCoord.getLat(), currentCoord.getLon());
                         double d = this.distanceBetween(stopLatLong, currentLatLong);
                         if (d < 0.0000001) {
-                            System.out.println("Stop Announcement: Train " + tripId + " is arriving at stop " + stop.getName() + ".");
-                            TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + ".");
+                            String stopTime = this.unixToHourMin(this.trajectoryClock * 1000);
+                            System.out.println("Stop Announcement: Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
+                            TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
                         }
                     }
                 }
@@ -536,6 +537,15 @@ public class MapApp extends Application implements MapComponentInitializedListen
      * Taken from GMapsFX Example.
      */
     private void checkCenter(LatLong center) {
+    }
+
+    /**
+     * Converts a unix time to a HH:MM time
+     */
+    private String unixToHourMin(long unixTime) {
+        Calendar c = new GregorianCalendar(TimeZone.getTimeZone("PST"));
+        c.setTimeInMillis(unixTime);
+        return String.format("%02d:%02d", c.get(Calendar.HOUR), c.get(Calendar.MINUTE));
     }
 
     /**
