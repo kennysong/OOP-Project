@@ -6,12 +6,14 @@ public class Trajectory {
     // Private instance variables for a Trajectory object
     private String tripId;
     private String serviceId;
+    private int routeId;
     private SortedMap<Long, Coordinate> trajectory;
 
     /* Constructor for a Trajectory */
-    public Trajectory(String tripId, String serviceId, SortedMap<Long, Coordinate> trajectory) {
+    public Trajectory(String tripId, String serviceId, int routeId, SortedMap<Long, Coordinate> trajectory) {
         this.tripId = tripId;
         this.serviceId = serviceId;
+        this.routeId = routeId;
         this.trajectory = trajectory;
     }
 
@@ -39,6 +41,13 @@ public class Trajectory {
      */
     public String getServiceId() {
         return this.serviceId;
+    }
+
+    /**
+     * Returns the route if of the instance
+     */
+    public int getRouteId() {
+        return this.routeId;
     }
 
     /* Returns boolean of if the trajectory is active at a specific time */

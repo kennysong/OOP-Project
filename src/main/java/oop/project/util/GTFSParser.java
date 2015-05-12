@@ -27,11 +27,12 @@ public class GTFSParser {
                 // Get attributes for new Trajectory
                 String tripId = trip.get("trip_id");
                 String serviceId = trip.get("service_id");
+                int routeId = Integer.parseInt(trip.get("route_id"));
                 SortedMap<Long, Coordinate> trajectoryMap = getTrajectoryMap(tripId,
                         serviceId, calendar, routes, stopTimes, stops);
 
                 // Create new Trajectory, add it to the list
-                Trajectory trajectory = new Trajectory(tripId, serviceId, trajectoryMap);
+                Trajectory trajectory = new Trajectory(tripId, serviceId, routeId, trajectoryMap);
                 trajectories.add(trajectory);
             }
         } catch (IOException e) {

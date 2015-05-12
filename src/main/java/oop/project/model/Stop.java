@@ -68,6 +68,6 @@ public class Stop {
      * @return          string representing the name of the stop
      */
     public String getName() {
-        return this.stopName + " (" + this.stopID + ")";
+        return this.stopName;
     }
 }

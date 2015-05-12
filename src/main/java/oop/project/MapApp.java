@@ -296,12 +296,13 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     trajectory.getServiceId().equals("SUN")) { continue; }
 
             // See which trajctories are active at this time
+            String tripId = trajectory.getTripId();
             Coordinate currentCoord = trajectory.getPosition(this.trajectoryClock);
             if (currentCoord != null) {
                 // If real time, match active trip IDs to the latest feed data
                 if (this.isRealTime) {
-                    if (!this.feedActiveTrips.contains(trajectory.getTripId())) {
-                        System.out.println("GTFS scheduled trip not in real time feed: " + trajectory.getTripId());
+                    if (!this.feedActiveTrips.contains(tripId)) {
+                        System.out.println("GTFS scheduled trip not in real time feed: " + tripId);
                         continue;
                     }
                 }
@@ -312,6 +313,22 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 Marker marker = new Marker(markerOptions);
                 this.map.addMarker(marker);
                 this.markersOnMap.add(marker);
+
+                // Check which trains are currently very near a stop
+                for (ArrayList<Stop> route : this.routes) {
+                    for (Stop stop : route) {
+                        if (trajectory.getRouteId() != stop.getRouteID()) { continue; }
+
+                        // Check if current coordinates are a stop coordinate
+                        LatLong stopLatLong = new LatLong(stop.getCoord().getLat(), stop.getCoord().getLon());
+                        LatLong currentLatLong = new LatLong(currentCoord.getLat(), currentCoord.getLon());
+                        double d = this.distanceBetween(stopLatLong, currentLatLong);
+                        if (d < 0.0000001) {
+                            System.out.println("Stop Announcement: Train " + tripId + " is arriving at stop " + stop.getName() + ".");
+                            TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + ".");
+                        }
+                    }
+                }
             }
         }
     }
@@ -323,7 +340,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
         if (this.isRealTime) {
             // Set clock to current time in SF
             Calendar c = new GregorianCalendar(TimeZone.getTimeZone("PST"));
-            String timeStr = String.format("%02d:%02d:%02d", c.get(Calendar.HOUR), 
+            String timeStr = String.format("%02d:%02d:%02d", c.get(Calendar.HOUR),
                                     c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
             this.trajectoryClock = GTFSParser.getElapsedTime(timeStr);
             System.out.println("Current time in SF: " + timeStr + " (" + this.trajectoryClock + ")");
