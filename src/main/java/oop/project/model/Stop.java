@@ -6,21 +6,21 @@ import java.util.*;
 
 public class Stop {
     // Private variables for a stop instance
-    int routeID;
+    int routeId;
     String routeName;
     String routeColor;
-    String stopID;
+    String stopId;
     String stopName;
     Coordinate stopCoords;
     String stopURL;
 
     /* Constructor method for a new stop */
-    public Stop(int routeID, String routeName, String routeColor, String stopID,
+    public Stop(int routeId, String routeName, String routeColor, String stopId,
                    String stopName, Coordinate stopCoords, String stopURL) {
-        this.routeID = routeID;
+        this.routeId = routeId;
         this.routeName = routeName;
         this.routeColor = routeColor;
-        this.stopID = stopID;
+        this.stopId = stopId;
         this.stopName = stopName;
         this.stopCoords = stopCoords;
         this.stopURL = stopURL;
@@ -29,10 +29,10 @@ public class Stop {
     /* Return a string representation of this stop */
     public String toString() {
         return "{\n"
-               + "  routeID: " + this.routeID + ",\n"
+               + "  routeId: " + this.routeId + ",\n"
                + "  routeName: " + this.routeName + ",\n"
                + "  routeColor: " + this.routeColor + ",\n"
-               + "  stopID: " + this.stopID + ",\n"
+               + "  stopId: " + this.stopId + ",\n"
                + "  stopName: " + this.stopName + ",\n"
                + "  stopCoords: " + this.stopCoords + ",\n"
                + "  stopURL: " + this.stopURL + "\n"
@@ -43,8 +43,8 @@ public class Stop {
      * Get this stop's route id
      * @return          int representing the route id of the containing route
      */
-    public int getRouteID() {
-        return this.routeID;
+    public int getRouteId() {
+        return this.routeId;
     }
 
     /**

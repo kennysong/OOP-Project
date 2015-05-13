@@ -150,14 +150,9 @@ public class MapApp extends Application implements MapComponentInitializedListen
      * Standard start method for JavaFX Applications
      */
     public void start(Stage stage) {
-        //test some of our fun classes
-        // TextToSpeech.speak("Hello world!");
-        // SMSSender.sendSMS("+12016321315", "Sent from MapApp.java.");
-        // MakeCall.makeCall("+12016321315");
-
         //load BART routes and trajectories
         this.loadRoutes();
-        // this.loadTrajectories();
+        this.loadTrajectories();
 
         //start clock for trajectories
         this.startTrajectoryClock();
@@ -165,7 +160,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //create and start services
         this.createTrajectoryService();
         this.createBartService();
-        // this.trajectoryService.start();
+        this.trajectoryService.start();
         this.bartService.start();
 
         //initialize the app
@@ -204,12 +199,40 @@ public class MapApp extends Application implements MapComponentInitializedListen
 
     /**
      * Creates a task to text a user about a train some amount of minutes before it arrives
+     * @param   num     the phone number should be texted
      * @param   min     the number of minutes before a train arrives
      */
-    public void launchTextTask(int min) {
+    public void launchTextTask(String num, int min) {
         this.notificationTask = new Task<Void>() {
             protected Void call() {
-                System.out.println("Starting Text Task");
+                boolean done = false;
+                while (!done) {
+                    try {
+                        Thread.sleep(1000);
+                        for (Trajectory trajectory : MapApp.this.trajectories) {
+                            // Skip weekend services for now
+                            if (trajectory.getServiceId().equals("SAT") ||
+                                    trajectory.getServiceId().equals("SUN")) { continue; }
+
+                            if (trajectory.getRouteId() == MapApp.this.selectedStop.getRouteId()) {
+                                // See which trajctories are active at this time
+                                String tripId = trajectory.getTripId();
+                                Coordinate currentCoord = trajectory.getPosition(MapApp.this.trajectoryClock + 60*min);
+                                if (currentCoord != null) {
+                                    double d = MapApp.this.distanceBetween(currentCoord, MapApp.this.selectedStop.getCoord());
+                                    System.out.println(d);
+                                    if (d < 0.0001) {
+                                        System.out.println("sending text to " + num);
+                                        SMSSender.sendSMS(num, "Sent from MapApp.java.");
+                                        done = true;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
                 return null;
             }
         };
@@ -220,12 +243,41 @@ public class MapApp extends Application implements MapComponentInitializedListen
 
     /**
      * Creates a task to call a user about a train some amount of minutes before it arrives
+     * @param   num     the phone number should be texted
      * @param   min     the number of minutes before a train arrives
      */
-    public void launchCallTask(int min) {
+    public void launchCallTask(String num, int min) {
         this.notificationTask = new Task<Void>() {
             protected Void call() {
-                System.out.println("Starting Call Task");
+                //switch used to continue loop; set to true after notification has been sent.
+                boolean done = false;
+                while (!done) {
+                    try {
+                        Thread.sleep(1000);
+                        for (Trajectory trajectory : MapApp.this.trajectories) {
+                            // Skip weekend services for now
+                            if (trajectory.getServiceId().equals("SAT") ||
+                                    trajectory.getServiceId().equals("SUN")) { continue; }
+
+                            if (trajectory.getRouteId() == MapApp.this.selectedStop.getRouteId()) {
+                                // See which trajctories are active at this time
+                                String tripId = trajectory.getTripId();
+                                Coordinate currentCoord = trajectory.getPosition(MapApp.this.trajectoryClock + 60*min);
+                                if (currentCoord != null) {
+                                    double d = MapApp.this.distanceBetween(currentCoord, MapApp.this.selectedStop.getCoord());
+                                    System.out.println(d);
+                                    if (d < 0.0001) {
+                                        System.out.println("sending call to " + num);
+                                        MakeCall.makeCall(num);
+                                        done = true;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
                 return null;
             }
         };
@@ -284,7 +336,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
     }
 
     /**
-     * Creates a scheduled service to get bart realtime updates every minute
+     * Creates a scheduled service to get bart realtime updates every 5 seconds
      */
     private void createBartService() {
         this.bartService = new ScheduledService<Void>() {
@@ -326,7 +378,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
             this.map.removeMarker(marker);
         }
 
-        System.out.println("Current trajectory clock: " + this.trajectoryClock);
+        // System.out.println("Current trajectory clock: " + this.trajectoryClock);
         for (Trajectory trajectory : this.trajectories) {
             // Skip weekend services for now
             if (trajectory.getServiceId().equals("SAT") ||
@@ -354,16 +406,16 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 // Check which trains are currently very near a stop
                 // for (ArrayList<Stop> route : this.routes) {
                 //     for (Stop stop : route) {
-                //         if (trajectory.getRouteId() != stop.getRouteID()) { continue; }
+                //         if (trajectory.getRouteId() != stop.getRouteId()) { continue; }
 
                 //         // Check if current coordinates are a stop coordinate
-                //         LatLong stopLatLong = new LatLong(stop.getCoord().getLat(), stop.getCoord().getLon());
-                //         LatLong currentLatLong = new LatLong(currentCoord.getLat(), currentCoord.getLon());
+                //         LatLong stopLatLong = stop.getCoord().toLatLong();
+                //         LatLong currentLatLong = currentCoord.toLatLong();
                 //         double d = this.distanceBetween(stopLatLong, currentLatLong);
                 //         if (d < 0.0000001) {
                 //             String stopTime = this.unixToHourMin(this.trajectoryClock * 1000);
                 //             System.out.println("Stop Announcement: Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
-                //             TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
+                //             // TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
                 //         }
                 //     }
                 // }
@@ -464,10 +516,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
                     case ESCAPE:
                         Platform.exit();
                         break;
-                    case SPACE:
-                        MapApp.this.trajectoryService.cancel();
-                        System.out.println(MapApp.this.trajectoryService.isRunning());
-                        break;
                 }
             }
         });
@@ -505,13 +553,6 @@ public class MapApp extends Application implements MapComponentInitializedListen
                .zoomControl(true);
         //set map using above options
         this.map = this.mapComponent.createMap(options);
-
-        //create and add marker for SF
-        // MarkerOptions markerOptions = new MarkerOptions()
-        //         .position(center)
-        //         .title("SF")
-        //         .visible(true);
-        // map.addMarker(new Marker(markerOptions));
 
         //draw lines
         for (ArrayList<Stop> route : MapApp.this.routes) {
@@ -567,6 +608,18 @@ public class MapApp extends Application implements MapComponentInitializedListen
         double dLat, dLon;
         dLat = loc2.latToRadians() - loc1.latToRadians();
         dLon = (loc2.longToRadians() - loc1.longToRadians())*Math.cos(0.5*(loc1.latToRadians() + loc2.latToRadians()));
+        return Math.sqrt(dLat*dLat + dLon*dLon);
+    }
+
+    /**
+     * Calculates the distance between Coordinate objects using equirectangular approximation
+     * @param   loc1    the first Coordinate Object
+     * @param   loc2    the second Coordinate Object
+     */
+    private double distanceBetween(Coordinate loc1, Coordinate loc2) {
+        double dLat, dLon;
+        dLat = Math.toRadians(loc2.getLat()) - Math.toRadians(loc1.getLat());
+        dLon = (Math.toRadians(loc2.getLon()) - Math.toRadians(loc1.getLon()))*Math.cos(0.5*(Math.toRadians(loc2.getLat()) + Math.toRadians(loc1.getLat())));
         return Math.sqrt(dLat*dLat + dLon*dLon);
     }
 
