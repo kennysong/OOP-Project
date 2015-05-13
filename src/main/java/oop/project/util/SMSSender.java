@@ -18,7 +18,8 @@ public class SMSSender {
 
     /* Main method that will send a test SMS. */
     public static void main(String[] args) {
-        sendSMS("+12016321315", "Sent from SMSSender.java.");
+        // sendSMS("+12016321315", "Sent from SMSSender.java.");
+        sendSMS("+12016321315", "Hello! Your train is arriving in 10 minutes.");
     }
 
     /* Static method that will send an SMS. */

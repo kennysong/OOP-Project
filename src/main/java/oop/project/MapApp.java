@@ -157,7 +157,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
 
         //load BART routes and trajectories
         this.loadRoutes();
-        // this.loadTrajectories();
+        this.loadTrajectories();
 
         //start clock for trajectories
         this.startTrajectoryClock();
@@ -165,7 +165,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //create and start services
         this.createTrajectoryService();
         this.createBartService();
-        // this.trajectoryService.start();
+        this.trajectoryService.start();
         this.bartService.start();
 
         //initialize the app
