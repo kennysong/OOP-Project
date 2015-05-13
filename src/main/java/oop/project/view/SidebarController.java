@@ -91,14 +91,18 @@ public class SidebarController {
         if (this.validStop() && this.validRadio() && this.validTime() && this.validPhone()) {
             if (this.mainApp.notificationTask != null && this.mainApp.notificationTask.getState() != State.SUCCEEDED) {
                 this.mainApp.notificationTask.cancel();
+                System.out.println("Notification canceled");
             }
+        else {
+            System.out.println("New notification task created");
+        }
             String opt = "";
             if (this.textRadio.isSelected()) {
                 opt = "text";
-                this.mainApp.launchTextTask(Integer.parseInt(this.notificationTime.getText()));
+                this.mainApp.launchTextTask(this.phoneNumber.getText(), Integer.parseInt(this.notificationTime.getText()));
             } else {
                 opt = "call";
-                this.mainApp.launchCallTask(Integer.parseInt(this.notificationTime.getText()));
+                this.mainApp.launchCallTask(this.phoneNumber.getText(), Integer.parseInt(this.notificationTime.getText()));
             }
             this.summary.setText("Got it. I will " + opt + " you at " + this.phoneNumber.getText() +
                                  " " + this.notificationTime.getText() + " minutes before your train arrives!");
