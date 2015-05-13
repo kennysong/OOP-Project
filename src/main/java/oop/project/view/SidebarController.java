@@ -1,6 +1,7 @@
 package oop.project.view;
 
 import javafx.fxml.FXML;
+import javafx.concurrent.Worker.State;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -34,6 +35,12 @@ public class SidebarController {
      */
     @FXML
     public ToggleGroup radioGroup;
+
+    /**
+     * FXML id to access notification time TextField
+     */
+    @FXML
+    public TextField notificationTime;
 
     /**
      * FXML id to access phone number TextField
@@ -81,20 +88,26 @@ public class SidebarController {
     private void summarize() {
         //only allow confirmation when stop is selected, one radio button is
         //selected, and the phone number is valid
-        if (this.validStop() && this.validRadio() && this.validPhone()) {
+        if (this.validStop() && this.validRadio() && this.validTime() && this.validPhone()) {
+            if (this.mainApp.notificationTask != null && this.mainApp.notificationTask.getState() != State.SUCCEEDED) {
+                this.mainApp.notificationTask.cancel();
+            }
             String opt = "";
             if (this.textRadio.isSelected()) {
                 opt = "text";
+                this.mainApp.launchTextTask(Integer.parseInt(this.notificationTime.getText()));
             } else {
                 opt = "call";
+                this.mainApp.launchCallTask(Integer.parseInt(this.notificationTime.getText()));
             }
             this.summary.setText("Got it. I will " + opt + " you at " + this.phoneNumber.getText() +
-                                 " when you need to leave for your train!");
+                                 " " + this.notificationTime.getText() + " minutes before your train arrives!");
         } else {
             this.summary.setText("Oop! Before I can let you know when to leave, make sure you've done the following:" +
                                  "\n1. Selected a stop" +
                                  "\n2. Selected 'Text Me' or 'Call Me'" +
-                                 "\n3. Entered your phone number");
+                                 "\n3. Entered a notification time" +
+                                 "\n4. Entered your phone number");
         }
     }
 
@@ -103,7 +116,7 @@ public class SidebarController {
      * @return          true if mainApp.selectedStop is not null; false otherwise
      */
     private boolean validStop() {
-        return (mainApp.getSelectedStop() != null);
+        return (this.mainApp.getSelectedStop() != null);
     }
 
     /**
@@ -112,6 +125,28 @@ public class SidebarController {
      */
     private boolean validRadio() {
         return (this.textRadio.isSelected() || this.callRadio.isSelected());
+    }
+
+    /**
+     * Checks if the given notification time is valid
+     * @return          true if the input text is a number between 1 and 10 inclusive; false otherwise
+     */
+    private boolean validTime() {
+        String time = this.notificationTime.getText();
+        if (time.isEmpty()) {
+            return false;
+        } else {
+            try {
+                int t = Integer.parseInt(time);
+                if (1 <= t && t <= 10) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
     }
 
     /**

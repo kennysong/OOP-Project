@@ -103,6 +103,11 @@ public class MapApp extends Application implements MapComponentInitializedListen
     private ScheduledService<Void> bartService;
 
     /**
+     * Task to check future trajectory times until notification can be sent
+     */
+    public Task notificationTask = null;
+
+    /**
      * Container for the feed entities
      */
     private List<FeedEntity> currentEntities = null;
@@ -152,7 +157,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
 
         //load BART routes and trajectories
         this.loadRoutes();
-        this.loadTrajectories();
+        // this.loadTrajectories();
 
         //start clock for trajectories
         this.startTrajectoryClock();
@@ -160,7 +165,7 @@ public class MapApp extends Application implements MapComponentInitializedListen
         //create and start services
         this.createTrajectoryService();
         this.createBartService();
-        this.trajectoryService.start();
+        // this.trajectoryService.start();
         this.bartService.start();
 
         //initialize the app
@@ -193,6 +198,38 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 return null;
             }
         });
+        th.setDaemon(true);
+        th.start();
+    }
+
+    /**
+     * Creates a task to text a user about a train some amount of minutes before it arrives
+     * @param   min     the number of minutes before a train arrives
+     */
+    public void launchTextTask(int min) {
+        this.notificationTask = new Task<Void>() {
+            protected Void call() {
+                System.out.println("Starting Text Task");
+                return null;
+            }
+        };
+        Thread th = new Thread(this.notificationTask);
+        th.setDaemon(true);
+        th.start();
+    }
+
+    /**
+     * Creates a task to call a user about a train some amount of minutes before it arrives
+     * @param   min     the number of minutes before a train arrives
+     */
+    public void launchCallTask(int min) {
+        this.notificationTask = new Task<Void>() {
+            protected Void call() {
+                System.out.println("Starting Call Task");
+                return null;
+            }
+        };
+        Thread th = new Thread(this.notificationTask);
         th.setDaemon(true);
         th.start();
     }
@@ -315,21 +352,21 @@ public class MapApp extends Application implements MapComponentInitializedListen
                 this.markersOnMap.add(marker);
 
                 // Check which trains are currently very near a stop
-                for (ArrayList<Stop> route : this.routes) {
-                    for (Stop stop : route) {
-                        if (trajectory.getRouteId() != stop.getRouteID()) { continue; }
+                // for (ArrayList<Stop> route : this.routes) {
+                //     for (Stop stop : route) {
+                //         if (trajectory.getRouteId() != stop.getRouteID()) { continue; }
 
-                        // Check if current coordinates are a stop coordinate
-                        LatLong stopLatLong = new LatLong(stop.getCoord().getLat(), stop.getCoord().getLon());
-                        LatLong currentLatLong = new LatLong(currentCoord.getLat(), currentCoord.getLon());
-                        double d = this.distanceBetween(stopLatLong, currentLatLong);
-                        if (d < 0.0000001) {
-                            String stopTime = this.unixToHourMin(this.trajectoryClock * 1000);
-                            System.out.println("Stop Announcement: Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
-                            TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
-                        }
-                    }
-                }
+                //         // Check if current coordinates are a stop coordinate
+                //         LatLong stopLatLong = new LatLong(stop.getCoord().getLat(), stop.getCoord().getLon());
+                //         LatLong currentLatLong = new LatLong(currentCoord.getLat(), currentCoord.getLon());
+                //         double d = this.distanceBetween(stopLatLong, currentLatLong);
+                //         if (d < 0.0000001) {
+                //             String stopTime = this.unixToHourMin(this.trajectoryClock * 1000);
+                //             System.out.println("Stop Announcement: Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
+                //             TextToSpeech.speak("Train " + tripId + " is arriving at stop " + stop.getName() + " at " + stopTime + ".");
+                //         }
+                //     }
+                // }
             }
         }
     }
